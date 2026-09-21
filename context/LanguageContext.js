@@ -56,6 +56,9 @@ const translations = {
     discountOff: 'OFF',
     noImage: 'No image available',
     noDescription: 'No product details available yet.',
+    quantity: 'Quantity',
+    availability: 'Availability',
+    keywords: 'Keywords',
 
     // Order Modal
     orderProduct: 'Order Product',
@@ -145,6 +148,9 @@ const translations = {
     discountOff: 'ছাড়',
     noImage: 'কোনো ছবি নেই',
     noDescription: 'এখনো কোনো পণ্যের বিবরণ যোগ করা হয়নি।',
+    quantity: 'পরিমাণ',
+    availability: 'স্টক',
+    keywords: 'কীওয়ার্ড',
 
     // Order Modal
     orderProduct: 'পণ্য অর্ডার',
