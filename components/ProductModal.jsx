@@ -8,36 +8,71 @@ import {
   ShoppingBag,
   Tag,
   Phone,
-  Package,
-  CheckCircle,
   XCircle,
   Hash,
+  Play,
 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useCategories } from '@/hooks/useCategories';
 import { formatPrice } from '@/lib/currency';
 import FormattedText from '@/components/FormattedText';
 import OrderModal from '@/components/OrderModal';
+import { extractYouTubeId, getYouTubeThumbnailUrl, getYouTubeEmbedUrl } from '@/lib/youtube';
 
 export default function ProductModal({ product, onClose }) {
   const { lang, t } = useLanguage();
   const { categories } = useCategories();
   const [activeIndex, setActiveIndex] = useState(0);
+  const [playing, setPlaying] = useState(false);
   const [orderOpen, setOrderOpen] = useState(false);
 
-  const rawImages =
+  const rawMedia =
     Array.isArray(product?.images) && product.images.length > 0
-      ? product.images.map((img) => (typeof img === 'string' ? img : img?.url)).filter(Boolean)
+      ? product.images
+          .map((item) => {
+            if (!item) return null;
+            if (typeof item === 'string') {
+              const ytId = extractYouTubeId(item);
+              if (ytId) {
+                return {
+                  type: 'video',
+                  url: item,
+                  youtube_id: ytId,
+                  thumbnail_url: getYouTubeThumbnailUrl(ytId),
+                  is_default: false,
+                };
+              }
+              return { type: 'image', url: item, is_default: false };
+            }
+            const ytId = extractYouTubeId(item?.url || item?.youtube_id || item?.video_url);
+            if (item?.type === 'video' || ytId) {
+              const videoId = ytId || item?.youtube_id;
+                return {
+                type: 'video',
+                url: item?.url || (videoId ? `https://www.youtube.com/watch?v=${videoId}` : ''),
+                youtube_id: videoId,
+                thumbnail_url: item?.thumbnail_url || (videoId ? getYouTubeThumbnailUrl(videoId) : ''),
+                is_default: Boolean(item?.is_default),
+              };
+            }
+            return {
+              type: 'image',
+              url: item?.url || '',
+              is_default: Boolean(item?.is_default),
+            };
+          })
+          .filter((m) => m && (m.url || m.youtube_id))
       : product?.image
-      ? [product.image]
+      ? [{ type: 'image', url: product.image, is_default: true }]
       : [];
-  const images = rawImages.length > 0 ? rawImages : [];
+
+  const mediaList = rawMedia.length > 0 ? rawMedia : [];
 
   useEffect(() => {
     if (!product) return;
-    setActiveIndex(0);
+    const defaultIdx = mediaList.findIndex((m) => m.is_default);
+    setActiveIndex(defaultIdx >= 0 ? defaultIdx : 0);
     setOrderOpen(false);
-
     const handleKey = (e) => {
       if (e.key === 'Escape') onClose();
     };
@@ -52,6 +87,11 @@ export default function ProductModal({ product, onClose }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product?.id]);
 
+  // Stop video playback whenever the active media changes
+  useEffect(() => {
+    setPlaying(false);
+  }, [activeIndex, product?.id]);
+
   if (!product) return null;
 
   const prodName = lang === 'bn' ? (product.name_bn || product.name) : product.name;
@@ -62,8 +102,10 @@ export default function ProductModal({ product, onClose }) {
       ? Math.round(((product.original_price - product.price) / product.original_price) * 100)
       : null;
 
-  const prevImage = () => setActiveIndex((i) => (i - 1 + images.length) % images.length);
-  const nextImage = () => setActiveIndex((i) => (i + 1) % images.length);
+  const prevMedia = () => setActiveIndex((i) => (i - 1 + mediaList.length) % mediaList.length);
+  const nextMedia = () => setActiveIndex((i) => (i + 1) % mediaList.length);
+
+  const activeMedia = mediaList[activeIndex];
 
   const getCategoryDisplay = () => {
     if (!product.category) return '';
@@ -106,15 +148,52 @@ export default function ProductModal({ product, onClose }) {
         </button>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-0 md:gap-2 p-4 sm:p-6">
-          {/* ==================== Image Gallery ==================== */}
+          {/* ==================== Media Gallery ==================== */}
           <div className="flex flex-col">
             <div className="relative h-72 sm:h-96 rounded-2xl overflow-hidden bg-brand-dark/50 border border-brand-border">
-              {images.length > 0 ? (
-                <img
-                  src={images[activeIndex]}
-                  alt={prodName}
-                  className="w-full h-full object-contain p-3"
-                />
+              {mediaList.length > 0 && activeMedia ? (
+                activeMedia.type === 'video' && activeMedia.youtube_id ? (
+                  playing ? (
+                    <iframe
+                      src={getYouTubeEmbedUrl(activeMedia.youtube_id, true)}
+                      title={prodName}
+                      className="absolute inset-0 w-full h-full border-0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                    />
+                  ) : (
+                    <div className="relative w-full h-full">
+                      <img
+                        src={
+                          activeMedia.thumbnail_url ||
+                          getYouTubeThumbnailUrl(activeMedia.youtube_id) ||
+                          activeMedia.url
+                        }
+                        alt={prodName}
+                        className="w-full h-full object-contain p-3"
+                        onError={(e) => {
+                          const fb = getYouTubeThumbnailUrl(activeMedia.youtube_id, 'mqdefault');
+                          if (fb && e.currentTarget.src !== fb) e.currentTarget.src = fb;
+                        }}
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                        <button
+                          onClick={() => setPlaying(true)}
+                          className="w-16 h-16 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-lg hover:scale-105 transition-transform cursor-pointer"
+                          aria-label="Play YouTube video"
+                        >
+                          <Play className="w-8 h-8 fill-white ml-1" />
+                        </button>
+                      </div>
+                    </div>
+                  )
+                ) : (
+                  <img
+                    src={activeMedia.url || activeMedia.thumbnail_url}
+                    alt={prodName}
+                    className="w-full h-full object-contain p-3"
+                  />
+                )
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-subtle text-sm">
                   {t('noImage')}
@@ -122,7 +201,7 @@ export default function ProductModal({ product, onClose }) {
               )}
 
               {/* Discount & badge overlays */}
-              <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
+              <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 z-10 pointer-events-none">
                 {product.deals && (
                   <span className="bg-amber-400 text-brand-dark text-[10px] font-bold px-2 py-0.5 rounded-full shadow flex items-center gap-1">
                     <Tag className="w-3 h-3 fill-brand-dark" /> DEAL
@@ -140,46 +219,67 @@ export default function ProductModal({ product, onClose }) {
                 )}
               </div>
 
-              {images.length > 1 && (
+              {mediaList.length > 1 && (
                 <>
                   <button
-                    onClick={prevImage}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition-colors cursor-pointer border border-white/20"
-                    aria-label="Previous image"
+                    onClick={prevMedia}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition-colors cursor-pointer border border-white/20 z-10"
+                    aria-label="Previous media"
                   >
                     <ChevronLeft className="w-5 h-5" />
                   </button>
                   <button
-                    onClick={nextImage}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition-colors cursor-pointer border border-white/20"
-                    aria-label="Next image"
+                    onClick={nextMedia}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition-colors cursor-pointer border border-white/20 z-10"
+                    aria-label="Next media"
                   >
                     <ChevronRight className="w-5 h-5" />
                   </button>
-                  <span className="absolute bottom-2 right-3 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                    {activeIndex + 1} / {images.length}
+                  <span className="absolute bottom-2 right-3 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full z-10">
+                    {activeIndex + 1} / {mediaList.length}
                   </span>
                 </>
               )}
             </div>
 
             {/* Thumbnails */}
-            {images.length > 1 && (
+            {mediaList.length > 1 && (
               <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
-                {images.map((img, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setActiveIndex(idx)}
-                    className={`w-16 h-16 shrink-0 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
-                      idx === activeIndex
-                        ? 'border-brand-cyan'
-                        : 'border-transparent opacity-70 hover:opacity-100'
-                    }`}
-                    aria-label={`Image ${idx + 1}`}
-                  >
-                    <img src={img} alt="" className="w-full h-full object-cover" />
-                  </button>
-                ))}
+                {mediaList.map((item, idx) => {
+                  const thumb =
+                    item.type === 'video'
+                      ? item.thumbnail_url || (item.youtube_id ? getYouTubeThumbnailUrl(item.youtube_id) : '')
+                      : item.url;
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => setActiveIndex(idx)}
+                      className={`relative w-16 h-16 shrink-0 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
+                        idx === activeIndex
+                          ? 'border-brand-cyan ring-2 ring-brand-cyan/30'
+                          : 'border-transparent opacity-70 hover:opacity-100'
+                      }`}
+                      aria-label={`Media ${idx + 1}`}
+                    >
+                      <img
+                        src={thumb || 'https://placehold.co/400x300?text=No+Image'}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const fb = 'https://placehold.co/400x300?text=No+Image';
+                          if (e.currentTarget.src !== fb) e.currentTarget.src = fb;
+                        }}
+                      />
+                      {item.type === 'video' && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                          <div className="w-6 h-6 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow">
+                            <Play className="w-3 h-3 fill-white ml-0.5" />
+                          </div>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -194,6 +294,7 @@ export default function ProductModal({ product, onClose }) {
             {/* Name */}
             <h2 className="font-display font-bold text-2xl sm:text-3xl text-main mt-3 leading-tight">
               {prodName}
+              {prodQty ? <span className="font-medium text-muted text-base sm:text-lg"> ({prodQty})</span> : null}
             </h2>
 
             {/* Price */}
@@ -215,34 +316,15 @@ export default function ProductModal({ product, onClose }) {
 
             <div className="my-4 h-px bg-brand-border/60" />
 
-            {/* Quick Info Grid */}
-            <div className="grid grid-cols-2 gap-3">
-              {/* Quantity */}
-              <div className="bg-brand-dark/50 border border-brand-border/60 rounded-xl p-3">
-                <div className="flex items-center gap-1.5 mb-1">
-                  <Package className="w-3.5 h-3.5 text-brand-cyan" />
-                  <span className="text-[10px] text-muted uppercase font-bold tracking-wider">{t('quantity') || 'Quantity'}</span>
-                </div>
-                <p className="text-sm font-bold text-main">
-                  {prodQty || (lang === 'bn' ? 'তথ্য নেই' : 'Not specified')}
+            {/* Out of Stock Notice (only shown when out of stock) */}
+            {product.available === false && (
+              <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 mt-4 flex items-center gap-2">
+                <XCircle className="w-4 h-4 text-red-400 shrink-0" />
+                <p className="text-sm font-bold text-red-400">
+                  {lang === 'bn' ? 'স্টকে নেই' : 'Out of Stock'}
                 </p>
               </div>
-
-              {/* Stock Status */}
-              <div className="bg-brand-dark/50 border border-brand-border/60 rounded-xl p-3">
-                <div className="flex items-center gap-1.5 mb-1">
-                  {product.available !== false ? (
-                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
-                  ) : (
-                    <XCircle className="w-3.5 h-3.5 text-red-400" />
-                  )}
-                  <span className="text-[10px] text-muted uppercase font-bold tracking-wider">{t('availability') || 'Availability'}</span>
-                </div>
-                <p className={`text-sm font-bold ${product.available !== false ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {product.available !== false ? (lang === 'bn' ? 'স্টকে আছে' : 'In Stock') : (lang === 'bn' ? 'স্টকে নেই' : 'Out of Stock')}
-                </p>
-              </div>
-            </div>
+            )}
 
             {/* Description */}
             <div className="mt-4 flex-grow">

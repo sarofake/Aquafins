@@ -7,6 +7,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { Search, Sparkles, PackageOpen, ShoppingBag, Tag } from 'lucide-react';
 import OrderModal from '@/components/OrderModal';
 import ProductModal from '@/components/ProductModal';
+import ProductCard from '@/components/ProductCard';
 import FormattedText from '@/components/FormattedText';
 import { useLanguage } from '@/context/LanguageContext';
 import { formatPrice } from '@/lib/currency';
@@ -185,72 +186,16 @@ function DealsCatalogContent() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {filteredProducts.map((product) => {
-              const discount =
-                product.original_price && product.original_price > product.price
-                  ? Math.round(((product.original_price - product.price) / product.original_price) * 100)
-                  : null;
-              const prodName = lang === 'bn' ? (product.name_bn || product.name) : product.name;
-              const prodQty = lang === 'bn' ? (product.quantity_bn || product.quantity) : product.quantity;
-              const prodDesc = lang === 'bn' ? (product.description_bn || product.description) : product.description;
-
-              return (
-                <div
-                  key={product.id}
-                  onClick={() => setDetailProduct(product)}
-                  className="group bg-brand-card border border-amber-500/40 rounded-2xl overflow-hidden hover:border-amber-400 transition-all flex flex-col justify-between hover:-translate-y-1 shadow-md hover:shadow-amber-500/10 cursor-pointer"
-                >
-                  <div className="relative h-48 overflow-hidden bg-brand-dark">
-                    <img
-                      src={product.image}
-                      alt={prodName}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute top-3 left-3 flex flex-wrap gap-1">
-                      <span className="bg-amber-400 text-brand-dark text-[10px] font-bold px-2 py-0.5 rounded-full shadow flex items-center gap-1">
-                        <Tag className="w-3 h-3 fill-brand-dark" /> DEAL
-                      </span>
-                      {discount && (
-                        <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">
-                          {discount}% OFF
-                        </span>
-                      )}
-                    </div>
-                    <span className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-amber-300 border border-amber-400/40 text-[10px] uppercase font-bold px-2.5 py-1 rounded-full">
-                      {categoryName(product.category)}
-                    </span>
-                  </div>
-
-                  <div className="p-5 flex-1 flex flex-col justify-between">
-                    <div>
-                      <h3 className="font-bold text-base text-main mb-1 group-hover:text-amber-400 transition-colors line-clamp-1">
-                        {prodName} {prodQty && <span className="text-xs text-muted font-normal">({prodQty})</span>}
-                      </h3>
-                      <FormattedText text={prodDesc} clamp="line-clamp-2" className="text-xs text-muted mb-4" />
-                    </div>
-
-                    <div className="flex items-center justify-between pt-3 border-t border-brand-border/50">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-lg font-bold text-amber-400">
-                          {formatPrice(product.price)}
-                        </span>
-                        {product.original_price && (
-                          <span className="text-xs text-subtle line-through">
-                            {formatPrice(product.original_price)}
-                          </span>
-                        )}
-                      </div>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setOrderProduct(product); }}
-                        className="bg-amber-400 text-brand-dark hover:bg-white border border-amber-400 px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-md"
-                      >
-                        <ShoppingBag className="w-3.5 h-3.5" /> {t('orderNow')}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            {filteredProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onSelect={(p) => setDetailProduct(p)}
+                onOrder={(p) => setOrderProduct(p)}
+                categoryName={categoryName}
+                accentColor="amber"
+              />
+            ))}
           </div>
         )}
 

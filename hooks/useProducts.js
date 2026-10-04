@@ -59,36 +59,50 @@ export function useProducts(options = {}) {
         return;
       }
 
-      let query = supabase
-        .from('products')
-        .select('id, name, name_bn, quantity, quantity_bn, category, category_id, price, original_price, description, description_bn, image, images, keywords, featured, deals, available')
-        .eq('available', true)
-        .order('featured', { ascending: false })
-        .order('created_at', { ascending: false })
-        .limit(limit);
+      try {
+        let query = supabase
+          .from('products')
+          .select('id, name, name_bn, quantity, quantity_bn, category, category_id, price, original_price, description, description_bn, image, images, keywords, featured, deals, available')
+          .eq('available', true)
+          .order('featured', { ascending: false })
+          .order('created_at', { ascending: false })
+          .limit(limit);
 
-      if (category && category !== 'all') {
-        query = query.eq('category', category);
-      }
-
-      if (deals) {
-        query = query.eq('deals', true);
-      }
-
-      const { data, error } = await query;
-      if (!cancelled) {
-        if (error) {
-          console.error('Supabase products fetch failed:', error.message);
-          setProducts([]);
-        } else if (data) {
-          setProducts(data);
-          clientProductCache.set(cacheKey, { data, timestamp: Date.now() });
+        if (category && category !== 'all') {
+          query = query.eq('category', category);
         }
-        setLoading(false);
+
+        if (deals) {
+          query = query.eq('deals', true);
+        }
+
+        const { data, error } = await query;
+        if (!cancelled) {
+          if (error) {
+            console.error('Supabase products fetch failed:', error.message);
+            setProducts([]);
+          } else if (data) {
+            setProducts(data);
+            clientProductCache.set(cacheKey, { data, timestamp: Date.now() });
+          }
+          setLoading(false);
+        }
+      } catch (err) {
+        console.warn('Direct Supabase products query failed:', err);
+        if (!cancelled) {
+          setProducts([]);
+          setLoading(false);
+        }
       }
     }
 
-    fetchProducts();
+    fetchProducts().catch((err) => {
+      console.warn('Products fetch failed:', err);
+      if (!cancelled) {
+        setProducts([]);
+        setLoading(false);
+      }
+    });
 
     return () => {
       cancelled = true;

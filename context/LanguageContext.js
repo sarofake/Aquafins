@@ -58,6 +58,9 @@ const translations = {
     noDescription: 'No product details available yet.',
     quantity: 'Quantity',
     availability: 'Availability',
+    inStock: 'In Stock',
+    outOfStock: 'Out of Stock',
+    stock: 'Stock',
     keywords: 'Keywords',
 
     // Order Modal
@@ -150,6 +153,9 @@ const translations = {
     noDescription: 'এখনো কোনো পণ্যের বিবরণ যোগ করা হয়নি।',
     quantity: 'পরিমাণ',
     availability: 'স্টক',
+    inStock: 'স্টকে আছে',
+    outOfStock: 'স্টকে নেই',
+    stock: 'স্টক',
     keywords: 'কীওয়ার্ড',
 
     // Order Modal

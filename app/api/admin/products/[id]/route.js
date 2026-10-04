@@ -2,6 +2,32 @@ import { NextResponse } from 'next/server';
 import { requireAuth, requireSupabase, sanitizeProduct } from '@/lib/adminHelpers';
 import { invalidateCache } from '@/lib/cache';
 
+export async function GET(req, { params }) {
+  const authCheck = requireAuth(req);
+  if (authCheck) return authCheck;
+
+  const sb = requireSupabase();
+  if (!sb) {
+    return NextResponse.json({ error: 'Supabase admin client not configured.' }, { status: 503 });
+  }
+
+  const { id } = await params;
+  const { data, error } = await sb
+    .from('products')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  if (!data) {
+    return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+  }
+
+  return NextResponse.json({ product: data });
+}
+
 export async function PUT(req, { params }) {
   const authCheck = requireAuth(req);
   if (authCheck) return authCheck;

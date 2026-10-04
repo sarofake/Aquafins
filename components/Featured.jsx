@@ -10,6 +10,8 @@ import FormattedText from '@/components/FormattedText';
 import { useLanguage } from '@/context/LanguageContext';
 import { formatPrice } from '@/lib/currency';
 
+import ProductCard from '@/components/ProductCard';
+
 export default function Featured() {
   const { lang, t } = useLanguage();
   const { products } = useProducts();
@@ -39,57 +41,15 @@ export default function Featured() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {featuredProducts.map((product) => {
-          const prodName = lang === 'bn' ? (product.name_bn || product.name) : product.name;
-          const prodQty = lang === 'bn' ? (product.quantity_bn || product.quantity) : product.quantity;
-          const prodDesc = lang === 'bn' ? (product.description_bn || product.description) : product.description;
-
-          return (
-            <div
-              key={product.id}
-              onClick={() => setDetailProduct(product)}
-              className="group bg-brand-card border border-brand-border rounded-2xl overflow-hidden hover:border-brand-cyan/50 transition-all duration-300 flex flex-col justify-between hover:-translate-y-2 shadow-lg hover:shadow-xl hover:shadow-brand-cyan/5 cursor-pointer"
-            >
-              <div className="relative h-52 overflow-hidden bg-brand-dark">
-                <img
-                  src={product.image}
-                  alt={prodName}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
-                />
-                <span className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-brand-cyan border border-brand-cyan/40 text-[10px] uppercase font-bold px-2.5 py-1 rounded-full">
-                  {t(product.category) || product.category}
-                </span>
-                <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
-              </div>
-
-              <div className="p-5 flex-1 flex flex-col justify-between bg-brand-dark/80">
-                <div>
-                  <h3 className="font-bold text-base text-main mb-1 group-hover:text-brand-cyan transition-colors line-clamp-1">
-                    {prodName} {prodQty && <span className="text-xs text-muted font-normal">({prodQty})</span>}
-                  </h3>
-                  <FormattedText text={prodDesc} clamp="line-clamp-2" className="text-xs text-muted mb-4" />
-                </div>
-
-                <div className="flex items-center justify-between pt-3 border-t border-brand-border/50">
-                  <span className="text-lg font-bold text-brand-cyan">
-                    {formatPrice(product.price)}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-brand-cyan group-hover:translate-x-1 transition-transform duration-300">
-                      <ArrowRight className="w-4 h-4" />
-                    </span>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setSelectedProduct(product); }}
-                      className="bg-brand-cyan text-brand-dark hover:bg-white border border-brand-cyan px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-md"
-                    >
-                      <ShoppingBag className="w-3.5 h-3.5" /> {t('orderNow')}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+        {featuredProducts.map((product) => (
+          <ProductCard
+            key={product.id}
+            product={product}
+            onSelect={(p) => setDetailProduct(p)}
+            onOrder={(p) => setSelectedProduct(p)}
+            accentColor="cyan"
+          />
+        ))}
       </div>
 
       <OrderModal
