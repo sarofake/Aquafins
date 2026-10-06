@@ -1,7 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import { Fish, Leaf, Package, MapPin, Phone, Mail } from 'lucide-react';
+import {
+  Fish,
+  Leaf,
+  Package,
+  MapPin,
+  Phone,
+  Mail,
+  Target,
+  Sparkles,
+  Compass,
+} from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 
 export default function AboutPage() {
@@ -38,6 +48,30 @@ export default function AboutPage() {
     },
   ];
 
+  const storySections = [
+    {
+      icon: Target,
+      color: 'text-brand-cyan',
+      bg: 'bg-brand-cyan/10',
+      title: t('aboutGoalTitle'),
+      paragraphs: [t('aboutGoalDesc')],
+    },
+    {
+      icon: Sparkles,
+      color: 'text-yellow-400',
+      bg: 'bg-yellow-500/10',
+      title: t('aboutSpecialtyTitle'),
+      paragraphs: [t('aboutSpecialtyDesc1'), t('aboutSpecialtyDesc2')],
+    },
+    {
+      icon: Compass,
+      color: 'text-green-400',
+      bg: 'bg-green-500/10',
+      title: t('aboutJourneyTitle'),
+      paragraphs: [t('aboutJourneyDesc1'), t('aboutJourneyDesc2')],
+    },
+  ];
+
   return (
     <div>
       {/* Page Banner */}
@@ -52,21 +86,21 @@ export default function AboutPage() {
         </div>
       </div>
 
-      {/* Company Story */}
+      {/* Intro + Highlights */}
       <section className="max-w-7xl mx-auto px-4 lg:px-12 py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
           <div className="space-y-4">
             <span className="text-brand-cyan text-xs font-bold uppercase tracking-wider block">
               {t('whoWeAre')}
             </span>
             <h2 className="text-3xl font-display font-bold text-main">
-              {t('passionateTitle')}
+              {t('aboutBrandTitle')}
             </h2>
             <p className="text-muted text-sm leading-relaxed">
-              {t('passionateDesc1')}
+              {t('aboutIntro1')}
             </p>
             <p className="text-muted text-sm leading-relaxed">
-              {t('passionateDesc2')}
+              {t('aboutIntro2')}
             </p>
             <div className="flex flex-wrap gap-4 pt-2">
               <Link
@@ -103,6 +137,44 @@ export default function AboutPage() {
             })}
           </div>
         </div>
+      </section>
+
+      {/* Goal / Specialties / Journey */}
+      <section className="bg-brand-card border-y border-brand-border/40">
+        <div className="max-w-7xl mx-auto px-4 lg:px-12 py-16 space-y-12">
+          {storySections.map((section) => {
+            const IconComponent = section.icon;
+            return (
+              <div
+                key={section.title}
+                className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-10"
+              >
+                <div className="flex items-start gap-4 lg:block">
+                  <div className={`w-12 h-12 rounded-full ${section.bg} flex items-center justify-center ${section.color} flex-shrink-0`}>
+                    <IconComponent className="w-6 h-6" />
+                  </div>
+                  <h2 className="text-2xl font-display font-bold text-main lg:mt-4">
+                    {section.title}
+                  </h2>
+                </div>
+                <div className="lg:col-span-2 space-y-4">
+                  {section.paragraphs.map((paragraph) => (
+                    <p key={paragraph} className="text-muted text-sm leading-relaxed">
+                      {paragraph}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Tagline */}
+      <section className="max-w-7xl mx-auto px-4 lg:px-12 py-14">
+        <p className="text-center text-brand-cyan font-display text-2xl md:text-3xl tracking-wide">
+          {t('aboutTagline')}
+        </p>
       </section>
 
       {/* Contact Strip */}

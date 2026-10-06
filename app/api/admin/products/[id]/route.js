@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { requireAuth, requireSupabase, sanitizeProduct } from '@/lib/adminHelpers';
+import { requireAuth, requireSupabase, sanitizeProduct, ensureUniqueSlug } from '@/lib/adminHelpers';
 import { invalidateCache } from '@/lib/cache';
 
 export async function GET(req, { params }) {
@@ -43,6 +43,18 @@ export async function PUT(req, { params }) {
     if (product.error) return NextResponse.json({ error: product.error }, { status: 400 });
 
     const { id } = await params;
+
+    // Renaming a product must never change its public URL.
+    if (!body.slug || !String(body.slug).trim()) {
+      const { data: existing } = await sb
+        .from('products')
+        .select('slug')
+        .eq('id', id)
+        .maybeSingle();
+      if (existing?.slug) product.slug = existing.slug;
+    }
+    product.slug = await ensureUniqueSlug(sb, product.slug, id);
+
     const { data, error } = await sb
       .from('products')
       .update(product)

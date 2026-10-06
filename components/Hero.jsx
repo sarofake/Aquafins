@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ShoppingCart, ChevronLeft, ChevronRight, Compass } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 
 export default function Hero() {
-  const canvasRef = useRef(null);
   const { lang, t } = useLanguage();
   const [slides, setSlides] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,87 +39,6 @@ export default function Hero() {
     return () => clearInterval(interval);
   }, [slides.length]);
 
-  // Bubble animation background canvas
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    let width = (canvas.width = canvas.parentElement?.offsetWidth || window.innerWidth);
-    let height = (canvas.height = canvas.parentElement?.offsetHeight || 600);
-
-    const handleResize = () => {
-      if (canvas.parentElement) {
-        width = canvas.width = canvas.parentElement.offsetWidth;
-        height = canvas.height = canvas.parentElement.offsetHeight;
-      }
-    };
-    window.addEventListener('resize', handleResize);
-
-    const bubbles = [];
-    const maxBubbles = 25;
-
-    class Bubble {
-      constructor() {
-        this.reset();
-        this.y = Math.random() * height;
-      }
-
-      reset() {
-        this.x = Math.random() * width;
-        this.y = height + Math.random() * 20;
-        this.radius = Math.random() * 5 + 2;
-        this.speed = Math.random() * 1.0 + 0.3;
-        this.opacity = Math.random() * 0.3 + 0.1;
-        this.wobble = Math.random() * 0.5;
-        this.wobbleSpeed = Math.random() * 0.02 + 0.01;
-      }
-
-      update() {
-        this.y -= this.speed;
-        this.x += Math.sin(this.y * this.wobbleSpeed) * this.wobble;
-        if (this.y < -10) {
-          this.reset();
-        }
-      }
-
-      draw() {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(0, 242, 254, ${this.opacity})`;
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.arc(this.x - this.radius / 3, this.y - this.radius / 3, this.radius / 5, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity * 0.8})`;
-        ctx.fill();
-      }
-    }
-
-    for (let i = 0; i < maxBubbles; i++) {
-      bubbles.push(new Bubble());
-    }
-
-    let animationId;
-    function animate() {
-      ctx.clearRect(0, 0, width, height);
-      bubbles.forEach((b) => {
-        b.update();
-        b.draw();
-      });
-      animationId = requestAnimationFrame(animate);
-    }
-
-    animate();
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      cancelAnimationFrame(animationId);
-    };
-  }, []);
-
   const currentSlide = slides[currentIndex] || {};
 
   // Localized field selectors - strictly use admin data when slides exist
@@ -147,7 +65,6 @@ export default function Hero() {
   if (loading) {
     return (
       <section className="relative w-full min-h-[65vh] lg:h-[70vh] border-b border-brand-border/50 overflow-hidden bg-brand-dark flex items-center justify-center">
-        <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none z-0" />
         <div className="w-12 h-12 rounded-full border-2 border-brand-cyan/30 border-t-brand-cyan animate-spin" />
       </section>
     );
@@ -159,7 +76,7 @@ export default function Hero() {
 
   return (
     <section
-      id="hero-ripple-section"
+      id="hero-section"
       className="relative w-full min-h-[65vh] lg:h-[70vh] border-b border-brand-border/50 overflow-hidden bg-brand-dark transition-all duration-700"
       style={{
         backgroundImage: currentSlide?.image
@@ -169,9 +86,6 @@ export default function Hero() {
         backgroundPosition: 'center',
       }}
     >
-      {/* Bubble canvas overlay */}
-      <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none z-0" />
-
       {/* Slide Content */}
       <div className="relative max-w-7xl mx-auto h-full px-4 lg:px-12 py-16 flex flex-col justify-center z-10">
         <div className="max-w-2xl">

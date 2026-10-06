@@ -18,6 +18,7 @@ const DEFAULT_CATEGORIES = [
   { id: 'livestock', slug: 'livestock', name: 'Livestock', parent_id: null },
   { id: 'food-accessories', slug: 'food-accessories', name: 'Food & Accessories', parent_id: null },
   { id: 'scaping', slug: 'scaping', name: 'Scaping', parent_id: null },
+  { id: 'combo', slug: 'combo', name: 'Combo', parent_id: null },
 ];
 
 function matchesCategory(product, selected, categories) {

@@ -8,9 +8,10 @@ import {
 import DescriptionInput from '@/components/DescriptionInput';
 import { CURRENCY_SYMBOL } from '@/lib/currency';
 import { extractYouTubeId, getYouTubeThumbnailUrl } from '@/lib/youtube';
+import { getMissingProductFields, isProductDraft } from '@/lib/productValidation';
 
 const EMPTY_FORM = {
-  name: '', name_bn: '', quantity: '', quantity_bn: '', category: '', category_id: '', price: '', original_price: '',
+  name: '', name_bn: '', slug: '', quantity: '', quantity_bn: '', category: '', category_id: '', price: '', original_price: '',
   description: '', description_bn: '', image: '', images: [], keywords: '', featured: false, deals: false, available: true,
 };
 
@@ -67,6 +68,7 @@ export function productToForm(p) {
   return {
     name: p.name || '',
     name_bn: p.name_bn || '',
+    slug: p.slug || '',
     quantity: p.quantity || '',
     quantity_bn: p.quantity_bn || '',
     category: p.category || '',
@@ -258,13 +260,68 @@ export default function ProductForm({ product = null, categories = [], onSaved, 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Save failed');
       setErrorMsg('');
-      setSuccessMsg(isEdit ? 'Product updated!' : 'Product created!');
+      const savedId = data?.product?.id || product?.id;
+      setSuccessMsg(
+        isEdit
+          ? `Product #${savedId} updated successfully!`
+          : `Product created successfully! Product ID: #${savedId || 'N/A'}`
+      );
       if (onSaved) onSaved(data.product || product);
     } catch (err) { setErrorMsg(err.message); } finally { setSaving(false); }
   };
 
+  const currentMissing = getMissingProductFields({
+    ...form,
+    image: primaryFromImages(form.images, form.image),
+  });
+  const isDraftStatus = currentMissing.length > 0;
+
   return (
     <div className="text-slate-900">
+      <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+        {product?.id && (
+          <div className="inline-flex items-center gap-1.5 bg-slate-900 text-amber-400 border border-slate-700 font-mono text-xs font-bold px-3 py-1 rounded-full shadow-sm">
+            Product ID: #{product.id}
+          </div>
+        )}
+      </div>
+
+      {/* Mandatory Fields & Draft Status Alert Box */}
+      <div className={`p-4 rounded-2xl mb-6 border flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs transition-all shadow-xs ${
+        isDraftStatus
+          ? 'bg-amber-50/90 border-amber-300 text-amber-900'
+          : 'bg-emerald-50/90 border-emerald-300 text-emerald-900'
+      }`}>
+        <div className="flex items-start gap-2.5">
+          {isDraftStatus ? (
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+          ) : (
+            <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+          )}
+          <div>
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <span className="font-bold text-sm">
+                {isDraftStatus ? 'Draft / Incomplete Product' : 'Product Information Complete'}
+              </span>
+              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
+                isDraftStatus ? 'bg-amber-200 text-amber-900' : 'bg-emerald-200 text-emerald-900'
+              }`}>
+                {isDraftStatus ? `Draft (${currentMissing.length} Required Field${currentMissing.length > 1 ? 's' : ''} Unfilled)` : 'Ready To Publish'}
+              </span>
+            </div>
+            {isDraftStatus ? (
+              <p className="text-amber-800 text-xs leading-relaxed">
+                <strong>Mandatory fields not filled:</strong> <span className="underline decoration-amber-400 font-semibold">{currentMissing.join(', ')}</span>
+              </p>
+            ) : (
+              <p className="text-emerald-800 text-xs">
+                All mandatory specifications have been provided!
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
       {successMsg && <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs p-3.5 rounded-xl mb-6 flex items-center gap-2"><CheckCircle className="w-4 h-4 shrink-0" /><span>{successMsg}</span></div>}
       {errorMsg && <div className="bg-red-50 border border-red-200 text-red-600 text-xs p-3.5 rounded-xl mb-6 flex items-center gap-2"><AlertCircle className="w-4 h-4 shrink-0" /><span>{errorMsg}</span></div>}
 

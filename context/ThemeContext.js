@@ -4,67 +4,43 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 
 const STORAGE_KEY = 'aquafins_theme';
 
-const ThemeContext = createContext({ theme: 'auto', resolvedTheme: 'dark', toggleTheme: () => {} });
-
-function deviceTheme() {
-  if (typeof window === 'undefined') return 'dark';
-  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-}
-
-function resolveTheme(mode) {
-  return mode === 'auto' ? deviceTheme() : mode;
-}
+const ThemeContext = createContext({ theme: 'light', resolvedTheme: 'light', toggleTheme: () => {} });
 
 function applyTheme(mode) {
   if (typeof document === 'undefined') return;
-  document.documentElement.classList.toggle('light', resolveTheme(mode) === 'light');
+  const isLight = mode === 'light';
+  document.documentElement.classList.toggle('light', isLight);
 }
 
 function loadSavedTheme() {
-  if (typeof window === 'undefined') return 'auto';
+  if (typeof window === 'undefined') return 'light';
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved === 'light' || saved === 'dark' || saved === 'auto') return saved;
+    if (saved === 'light' || saved === 'dark') return saved;
   } catch {}
-  return 'auto';
+  return 'light';
 }
 
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState('auto');
-  const [resolvedTheme, setResolvedTheme] = useState('dark');
+  const [theme, setTheme] = useState('light');
 
   useEffect(() => {
     const saved = loadSavedTheme();
     setTheme(saved);
-    setResolvedTheme(resolveTheme(saved));
     applyTheme(saved);
-
-    const mq = window.matchMedia('(prefers-color-scheme: light)');
-    const onChange = () => {
-      setTheme((current) => {
-        if (current === 'auto') {
-          setResolvedTheme(deviceTheme());
-          applyTheme('auto');
-        }
-        return current;
-      });
-    };
-    mq.addEventListener('change', onChange);
-    return () => mq.removeEventListener('change', onChange);
   }, []);
 
   const toggleTheme = useCallback(() => {
     setTheme((prev) => {
-      const next = prev === 'auto' ? 'light' : prev === 'light' ? 'dark' : 'auto';
+      const next = prev === 'light' ? 'dark' : 'light';
       applyTheme(next);
-      setResolvedTheme(resolveTheme(next));
       try { localStorage.setItem(STORAGE_KEY, next); } catch {}
       return next;
     });
   }, []);
 
   return (
-    <ThemeContext.Provider value={{ theme, resolvedTheme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, resolvedTheme: theme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );

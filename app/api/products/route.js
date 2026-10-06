@@ -19,8 +19,7 @@ export async function GET(req) {
 
     let query = supabase
       .from('products')
-      .select('id, name, name_bn, quantity, quantity_bn, category, category_id, price, original_price, description, description_bn, image, images, keywords, featured, deals, available, created_at')
-      .eq('available', true)
+      .select('*')
       .order('featured', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(limit);

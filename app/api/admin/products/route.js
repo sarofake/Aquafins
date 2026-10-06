@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { requireAuth, requireSupabase, sanitizeProduct } from '@/lib/adminHelpers';
+import { requireAuth, requireSupabase, sanitizeProduct, ensureUniqueSlug } from '@/lib/adminHelpers';
 import { invalidateCache } from '@/lib/cache';
 
 export async function GET(req) {
@@ -56,6 +56,8 @@ export async function POST(req) {
     const body = await req.json().catch(() => ({}));
     const product = await sanitizeProduct(body);
     if (product.error) return NextResponse.json({ error: product.error }, { status: 400 });
+
+    product.slug = await ensureUniqueSlug(sb, product.slug);
 
     const { data, error } = await sb
       .from('products')

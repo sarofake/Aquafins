@@ -10,7 +10,12 @@ export default function ThemeManager() {
     if (pathname.startsWith('/admin')) {
       document.documentElement.classList.add('light');
     } else {
-      document.documentElement.classList.remove('light');
+      const saved = localStorage.getItem('aquafins_theme');
+      if (saved === 'dark') {
+        document.documentElement.classList.remove('light');
+      } else {
+        document.documentElement.classList.add('light');
+      }
     }
   }, [pathname]);
 

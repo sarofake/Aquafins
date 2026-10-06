@@ -11,7 +11,6 @@ import {
   Menu,
   X,
   Phone,
-  MapPin,
   Home,
   Fish,
   Leaf,
@@ -22,9 +21,9 @@ import {
   Sun,
   Moon,
   Globe,
-  Info,
   Tag,
   Archive,
+  Package,
 } from 'lucide-react';
 
 export default function Header() {
@@ -37,7 +36,6 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
 
   const isHomeActive = pathname === '/' || pathname === '/home';
-  const isAboutActive = pathname === '/about';
   const isProductsActive = pathname === '/products';
   const isDealsActive = pathname === '/deals';
   const isArchiveActive = pathname === '/archive';
@@ -93,8 +91,8 @@ export default function Header() {
         <div className="overflow-hidden">
           <div className="bg-header-top text-xs px-4 lg:px-12 text-muted border-b border-brand-border/50 py-2 shadow-inner">
             <div className="max-w-7xl mx-auto flex justify-between items-center gap-2">
-              {/* Left Side: Only WhatsApp & Facebook Icon Redirect Buttons */}
-              <div className="flex items-center gap-2.5">
+              {/* Left Side: Social Icon Redirect Buttons */}
+              <div className="flex items-center gap-2">
                 {/* WhatsApp Icon */}
                 <a
                   href="https://wa.me/8801787283804"
@@ -122,10 +120,96 @@ export default function Header() {
                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                   </svg>
                 </a>
+
+                {/* YouTube Icon */}
+                <a
+                  href="https://www.youtube.com/@aquafinsbd"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-7 h-7 rounded-full bg-[#FF0000]/15 hover:bg-[#FF0000] text-[#FF0000] hover:text-white border border-[#FF0000]/40 flex items-center justify-center transition-all shadow-sm hover:scale-110"
+                  title="YouTube Channel"
+                  aria-label="YouTube Channel"
+                >
+                  <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                  </svg>
+                </a>
+
+                {/* Instagram Icon */}
+                <a
+                  href="https://www.instagram.com/aquafinsbd"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-7 h-7 rounded-full bg-[#E4405F]/15 hover:bg-[#E4405F] text-[#E4405F] hover:text-white border border-[#E4405F]/40 flex items-center justify-center transition-all shadow-sm hover:scale-110"
+                  title="Instagram"
+                  aria-label="Instagram"
+                >
+                  <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+                  </svg>
+                </a>
+
+                {/* Threads Icon */}
+                <a
+                  href="https://www.threads.com/@aquafinsbd"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-7 h-7 rounded-full bg-brand-main/15 hover:bg-brand-cyan hover:text-brand-dark text-main border border-brand-border flex items-center justify-center transition-all shadow-sm hover:scale-110"
+                  title="Threads"
+                  aria-label="Threads"
+                >
+                  <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                    <path d="M12.186 24c-3.141 0-5.789-1.1-7.658-3.181C2.53 18.6 1.637 15.632 1.996 12.239c.394-3.725 2.12-6.953 4.86-9.09C9.467 1.096 12.871.298 16.442.9c4.275.72 7.747 3.535 9.06 7.348a12.54 12.54 0 0 1 .498 3.551v.104c0 2.66-.826 4.887-2.392 6.44-1.458 1.448-3.468 2.227-5.813 2.253h-.142c-2.33-.047-4.22-.888-5.464-2.433-1.04-1.293-1.492-2.977-1.306-4.87.23-2.336 1.573-4.17 3.685-5.032 1.464-.598 3.238-.707 5.13-.315a.75.75 0 0 1 .6 0c.343.155.437.5.347.886-.09.386-.412.585-.755.485-1.58-.328-3.033-.225-4.2.252-1.61.658-2.617 2.053-2.79 3.82-.143 1.456.2 2.72.992 3.65.922 1.084 2.378 1.688 4.1 1.698 1.769-.02 3.26-.596 4.312-1.664 1.144-1.16 1.758-2.825 1.777-4.815V11.8c-.01-1.026-.174-2.072-.51-3.047-1.054-3.064-3.83-5.325-7.246-5.901-2.973-.502-5.795.165-7.945 1.878-2.296 1.83-3.742 4.542-4.072 7.636-.307 2.902.457 5.436 2.152 7.135 1.528 1.533 3.653 2.348 6.146 2.36h.082c1.782-.016 3.407-.468 4.832-1.343a.75.75 0 1 1 .786 1.277c-1.666 1.018-3.565 1.543-5.632 1.562z" />
+                  </svg>
+                </a>
+
+                {/* TikTok Icon */}
+                <a
+                  href="https://www.tiktok.com/@aquafinsbd"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-7 h-7 rounded-full bg-[#EE1D52]/15 hover:bg-[#EE1D52] text-[#EE1D52] hover:text-white border border-[#EE1D52]/40 flex items-center justify-center transition-all shadow-sm hover:scale-110"
+                  title="TikTok"
+                  aria-label="TikTok"
+                >
+                  <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 3 15.68 6.34 6.34 0 0 0 9.34 22a6.34 6.34 0 0 0 6.34-6.34V9.05a8.16 8.16 0 0 0 4.91 1.62V7.22a4.85 4.85 0 0 1-1-.53z" />
+                  </svg>
+                </a>
               </div>
 
-              {/* Right Side: Hotline & Location */}
-              <div className="flex items-center gap-4 text-xs">
+              {/* Right Side: Theme, Language & Hotline */}
+              <div className="flex items-center gap-3 text-xs">
+                {/* Theme Toggle Button (White / Dark) */}
+                <button
+                  onClick={toggleTheme}
+                  className="flex items-center gap-1.5 bg-brand-card hover:bg-brand-border/60 text-brand-cyan px-2.5 py-1.5 rounded-full border border-brand-border hover:border-brand-cyan/50 transition-all cursor-pointer shadow-sm"
+                  title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to White Mode'}
+                  aria-label="Toggle White/Dark Theme"
+                >
+                  {theme === 'light' ? (
+                    <Sun className="w-3.5 h-3.5 text-amber-500" />
+                  ) : (
+                    <Moon className="w-3.5 h-3.5 text-brand-cyan" />
+                  )}
+                  <span className="hidden sm:inline text-[11px] font-bold text-main">
+                    {theme === 'light' ? 'White' : 'Dark'}
+                  </span>
+                </button>
+
+                {/* Language Switcher Button */}
+                <button
+                  onClick={toggleLang}
+                  className="flex items-center gap-1.5 bg-brand-card hover:bg-brand-border/60 text-brand-cyan px-2.5 py-1.5 rounded-full border border-brand-border hover:border-brand-cyan/50 transition-all cursor-pointer shadow-sm"
+                  title={lang === 'bn' ? 'Switch to English' : 'বাংলায় পরিবর্তন করুন'}
+                  aria-label="Toggle language"
+                >
+                  <Globe className="w-3.5 h-3.5 text-brand-cyan" />
+                  <span className="text-[11px] font-bold text-main">{lang === 'bn' ? 'বাংলা' : 'ENG'}</span>
+                </button>
+
+                <span className="text-brand-border hidden sm:inline">|</span>
+
                 <a
                   href="tel:01787283804"
                   className="flex items-center gap-1.5 text-main font-medium hover:text-brand-cyan transition-colors"
@@ -133,11 +217,6 @@ export default function Header() {
                   <Phone className="w-3.5 h-3.5 text-brand-cyan" />
                   <span>{t('hotline')}: <strong className="text-brand-cyan">01787-283804</strong></span>
                 </a>
-                <span className="text-brand-border hidden sm:inline">|</span>
-                <div className="hidden sm:flex items-center gap-1.5 text-muted">
-                  <MapPin className="w-3.5 h-3.5 text-brand-cyan flex-shrink-0" />
-                  <span>{t('dhakaBangladesh')}</span>
-                </div>
               </div>
             </div>
           </div>
@@ -174,29 +253,6 @@ export default function Header() {
                 </div>
               </Link>
 
-              {/* Home & About links right after logo */}
-              <Link
-                href="/"
-                className={`hidden sm:flex items-center gap-2 bg-brand-card hover:bg-brand-border/60 px-4 py-2.5 rounded-full border border-brand-border hover:border-brand-cyan/50 transition-all shadow-sm ${
-                  isHomeActive ? 'text-brand-cyan font-bold' : 'text-main'
-                }`}
-                title={t('home')}
-              >
-                <Home className="w-4 h-4" />
-                <span className="text-xs font-bold">{t('home')}</span>
-              </Link>
-
-              <Link
-                href="/about"
-                className={`hidden sm:flex items-center gap-2 bg-brand-card hover:bg-brand-border/60 px-4 py-2.5 rounded-full border border-brand-border hover:border-brand-cyan/50 transition-all shadow-sm ${
-                  isAboutActive ? 'text-brand-cyan font-bold' : 'text-main'
-                }`}
-                title={t('about')}
-              >
-                <Info className="w-4 h-4" />
-                <span className="text-xs font-bold">{t('about')}</span>
-              </Link>
-
               {/* Center Search Input */}
               <form onSubmit={handleSearchSubmit} className="relative hidden md:block flex-1 max-w-lg mx-4">
                 <input
@@ -208,44 +264,16 @@ export default function Header() {
                 />
                 <button
                   type="submit"
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-brand-cyan text-brand-dark p-2 rounded-full hover:bg-white transition-colors cursor-pointer"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-brand-cyan text-slate-950 p-2 rounded-full hover:bg-white hover:text-black transition-colors cursor-pointer"
                   title="Search"
                 >
                   <Search className="w-3.5 h-3.5" />
                 </button>
               </form>
 
-              {/* Right Actions: Theme & Language Switcher Side by Side */}
+              {/* Right Actions: Deals & Menu */}
               <div className="flex items-center gap-2.5">
-                {/* Theme Toggle Button */}
-                <button
-                  onClick={toggleTheme}
-                  className="relative flex items-center gap-2 bg-brand-card hover:bg-brand-border/60 text-brand-cyan px-3.5 py-2 rounded-full border border-brand-border hover:border-brand-cyan/50 transition-all cursor-pointer shadow-sm"
-                  title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-                  aria-label="Toggle dark/light theme"
-                >
-                  {theme === 'dark' ? (
-                    <Sun className="w-4 h-4 text-brand-cyan" />
-                  ) : (
-                    <Moon className="w-4 h-4 text-brand-cyan" />
-                  )}
-                  <span className="hidden sm:inline text-xs font-bold text-main">
-                    {theme === 'dark' ? 'Light' : 'Dark'}
-                  </span>
-                </button>
-
-                {/* Language Switcher Button - RIGHT BESIDE Theme button */}
-                <button
-                  onClick={toggleLang}
-                  className="relative flex items-center gap-1.5 bg-brand-card hover:bg-brand-border/60 text-brand-cyan px-3.5 py-2 rounded-full border border-brand-border hover:border-brand-cyan/50 transition-all cursor-pointer shadow-sm text-xs font-bold"
-                  title={lang === 'bn' ? 'Switch to English' : 'বাংলায় পরিবর্তন করুন'}
-                  aria-label="Toggle language"
-                >
-                  <Globe className="w-4 h-4 text-brand-cyan" />
-                  <span className="text-main font-extrabold">{lang === 'bn' ? 'বাংলা' : 'ENG'}</span>
-                </button>
-
-                {/* Offer & Deals Button - RIGHT BESIDE Language button */}
+                {/* Offer & Deals Button */}
                 <Link
                   href="/deals"
                   className={`relative flex items-center gap-1.5 px-3.5 py-2 rounded-full border transition-all shadow-sm text-xs font-bold ${
@@ -338,9 +366,24 @@ export default function Header() {
 
             <Link
               href="/products?category=scaping"
-              className="hover:text-brand-cyan transition-colors flex items-center gap-1.5 text-muted"
+              className={
+                pathname.includes('category=scaping')
+                  ? 'text-brand-cyan font-bold flex items-center gap-1.5 border-b-2 border-brand-cyan pb-0.5'
+                  : 'hover:text-brand-cyan transition-colors flex items-center gap-1.5 text-muted'
+              }
             >
               <Mountain className="w-3.5 h-3.5 text-amber-400" /> {t('scaping')}
+            </Link>
+
+            <Link
+              href="/products?category=combo"
+              className={
+                pathname.includes('category=combo')
+                  ? 'text-brand-cyan font-bold flex items-center gap-1.5 border-b-2 border-brand-cyan pb-0.5'
+                  : 'hover:text-brand-cyan transition-colors flex items-center gap-1.5 text-muted'
+              }
+            >
+              <Package className="w-3.5 h-3.5 text-rose-400" /> {t('combo')}
             </Link>
 
             <span className="text-brand-border">|</span>
@@ -448,6 +491,13 @@ export default function Header() {
               className="hover:text-brand-cyan flex items-center gap-2"
             >
               <Mountain className="w-4 h-4 text-amber-400" /> {t('scaping')}
+            </Link>
+            <Link
+              href="/products?category=combo"
+              onClick={() => setMobileMenuOpen(false)}
+              className="hover:text-brand-cyan flex items-center gap-2"
+            >
+              <Package className="w-4 h-4 text-rose-400" /> {t('combo')}
             </Link>
             <hr className="border-brand-border/60" />
             <Link

@@ -3,9 +3,17 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Package, FolderTree, Sliders, Settings, Loader2 } from 'lucide-react';
+import DashboardCharts from '@/components/admin/DashboardCharts';
 
 export default function DashboardOverviewPage() {
-  const [stats, setStats] = useState({ products: 0, categories: 0, slides: 0 });
+  const [stats, setStats] = useState({
+    products: 0,
+    categories: 0,
+    slides: 0,
+    availableProducts: 0,
+    outOfStockProducts: 0,
+  });
+  const [categoryBreakdown, setCategoryBreakdown] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,7 +24,12 @@ export default function DashboardOverviewPage() {
           products: data.products || 0,
           categories: data.categories || 0,
           slides: data.slides || 0,
+          availableProducts: data.availableProducts || 0,
+          outOfStockProducts: data.outOfStockProducts || 0,
         });
+        if (Array.isArray(data.categoryBreakdown)) {
+          setCategoryBreakdown(data.categoryBreakdown);
+        }
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -45,6 +58,9 @@ export default function DashboardOverviewPage() {
         <p className="text-xs text-slate-500 mt-1">Quick summary of your catalog and site content</p>
       </div>
 
+      {/* GRAPH FOR TOTAL PRODUCTS & CATEGORIES (ON TOP) */}
+      <DashboardCharts stats={stats} categoryBreakdown={categoryBreakdown} />
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {cards.map((card) => {
           const Icon = card.icon;
@@ -69,3 +85,5 @@ export default function DashboardOverviewPage() {
     </div>
   );
 }
+
+

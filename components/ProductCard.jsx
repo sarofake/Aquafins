@@ -1,8 +1,10 @@
 'use client';
 
+import Link from 'next/link';
 import { ShoppingBag, Tag } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { formatPrice } from '@/lib/currency';
+import { productHref } from '@/lib/slugify';
 import FormattedText from '@/components/FormattedText';
 
 export default function ProductCard({
@@ -42,11 +44,14 @@ export default function ProductCard({
   const borderAccent = isAmber ? 'border-amber-400/40' : 'border-brand-cyan/40';
   const hoverBorder = isAmber ? 'hover:border-amber-400' : 'hover:border-brand-cyan/60';
 
-  return (
-    <div
-      onClick={() => onSelect && onSelect(product)}
-      className={`group bg-brand-card border border-brand-border ${hoverBorder} rounded-2xl overflow-hidden transition-all duration-300 flex flex-col justify-between hover:-translate-y-1 shadow-lg hover:shadow-xl cursor-pointer`}
-    >
+  // Every product links to /products/<category>/<slug>; pre-migration
+  // products without a slug keep the legacy modal via onSelect.
+  const href = productHref(product);
+
+  const cardClass = `group bg-brand-card border border-brand-border ${hoverBorder} rounded-2xl overflow-hidden transition-all duration-300 flex flex-col justify-between hover:-translate-y-1 shadow-lg hover:shadow-xl cursor-pointer`;
+
+  const content = (
+    <>
       {/* Product Image & Badges */}
       <div className="relative h-48 sm:h-52 overflow-hidden bg-brand-dark">
         <img
@@ -55,11 +60,11 @@ export default function ProductCard({
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
         />
 
-        {/* Top-Left Badges: Deals & Discount */}
+          {/* Top-Left Badges: Deals & Discount */}
         <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 z-10">
           {product.deals && (
-            <span className="bg-amber-400 text-brand-dark text-[10px] font-bold px-2 py-0.5 rounded-full shadow flex items-center gap-1">
-              <Tag className="w-3 h-3 fill-brand-dark" /> DEAL
+            <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full shadow flex items-center gap-1">
+              <Tag className="w-3 h-3 fill-slate-950" /> DEAL
             </span>
           )}
           {hasOriginalPrice && discountPercent > 0 && (
@@ -99,7 +104,7 @@ export default function ProductCard({
           )}
 
           {/* Description */}
-          <FormattedText text={prodDesc} clamp="line-clamp-2" className="text-xs text-muted mb-4" />
+          <FormattedText text={prodDesc} clamp="line-clamp-2" className="text-xs text-muted mb-4 leading-relaxed" />
         </div>
 
         {/* Price & Action Button Footer */}
@@ -124,10 +129,11 @@ export default function ProductCard({
           {isAvailable ? (
             <button
               onClick={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 if (onOrder) onOrder(product);
               }}
-              className={`${bgAccent} text-brand-dark hover:bg-white border ${borderAccent} px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-md shrink-0`}
+              className={`${bgAccent} text-slate-950 hover:bg-white hover:text-black border ${borderAccent} px-3.5 py-1.5 rounded-full text-xs font-extrabold transition-all flex items-center gap-1.5 cursor-pointer shadow-md shrink-0 active:scale-95`}
             >
               <ShoppingBag className="w-3.5 h-3.5" /> {t('orderNow')}
             </button>
@@ -141,6 +147,23 @@ export default function ProductCard({
           )}
         </div>
       </div>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link href={href} className={cardClass} aria-label={prodName}>
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <div
+      onClick={() => onSelect && onSelect(product)}
+      className={cardClass}
+    >
+      {content}
     </div>
   );
 }

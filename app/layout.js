@@ -17,10 +17,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className="scroll-smooth" suppressHydrationWarning>
       <head>
-        {/* Apply saved theme before paint to prevent flash */}
+        {/* Apply saved theme before paint to prevent flash (default: light / white) */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var s=localStorage.getItem('aquafins_theme');if(s==='light'||s==='dark'){document.documentElement.classList.toggle('light',s==='light');}else if(window.location.pathname.startsWith('/admin')){document.documentElement.classList.add('light');}else if(window.matchMedia('(prefers-color-scheme: light)').matches){document.documentElement.classList.add('light');}}catch(e){}})();`,
+            __html: `(function(){try{var s=localStorage.getItem('aquafins_theme');if(s==='dark'){document.documentElement.classList.remove('light');}else{document.documentElement.classList.add('light');}}catch(e){}})();`,
           }}
         />
         {/* Google Fonts */}

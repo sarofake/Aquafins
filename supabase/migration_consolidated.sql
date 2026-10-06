@@ -33,6 +33,7 @@ create table if not exists public.products (
   id              bigint generated always as identity primary key,
   name            text not null,
   name_bn         text not null default '',
+  slug            text not null,
   category        text not null default '',
   category_id     bigint references public.categories(id) on delete set null,
   price           numeric(10,2) not null,
@@ -53,6 +54,7 @@ create table if not exists public.products (
 );
 
 -- Query-optimized indexes (covers all public + admin queries)
+create unique index if not exists products_slug_key    on public.products (slug);
 create index if not exists products_category_idx      on public.products (category);
 create index if not exists products_category_id_idx   on public.products (category_id);
 create index if not exists products_featured_idx      on public.products (featured) where featured is true;
@@ -129,7 +131,8 @@ values
   ('Fish',               'fish',              'Fish',     'Bettas & Exotic Freshwater Fish',           2),
   ('Livestock',          'livestock',         'Shell',    'Shrimps, Snails & Invertebrates',           3),
   ('Food & Accessories', 'food-accessories',  'Utensils', 'Pellets, Flakes, Filters & LED Lighting', 4),
-  ('Scaping',            'scaping',           'Mountain', 'Aquascaping Rocks, Driftwood & Substrates', 5)
+  ('Scaping',            'scaping',           'Mountain', 'Aquascaping Rocks, Driftwood & Substrates', 5),
+  ('Combo',              'combo',             'Package',  'Bundle deals and combo packs',               6)
 on conflict (slug) do update set
   name = excluded.name,
   icon = excluded.icon,

@@ -18,6 +18,7 @@ const DEFAULT_CATEGORIES = [
   { id: 'livestock', slug: 'livestock', name: 'Livestock', parent_id: null },
   { id: 'food-accessories', slug: 'food-accessories', name: 'Food & Accessories', parent_id: null },
   { id: 'scaping', slug: 'scaping', name: 'Scaping', parent_id: null },
+  { id: 'combo', slug: 'combo', name: 'Combo', parent_id: null },
 ];
 
 function matchesCategory(product, selected, categories) {
@@ -151,7 +152,7 @@ function ProductsCatalogContent() {
               onClick={() => handleCategorySelect('all')}
               className={
                 selectedCategory === 'all'
-                  ? 'bg-brand-cyan text-brand-dark px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer'
+                  ? 'bg-brand-cyan text-slate-950 font-extrabold px-4 py-1.5 rounded-full text-xs transition-all cursor-pointer shadow-md'
                   : 'bg-brand-card text-muted hover:text-main px-4 py-1.5 rounded-full text-xs font-bold border border-brand-border transition-all cursor-pointer'
               }
             >
@@ -163,7 +164,7 @@ function ProductsCatalogContent() {
                 onClick={() => handleCategorySelect(cat.slug)}
                 className={
                   selectedCategory === cat.slug
-                    ? 'bg-brand-cyan text-brand-dark px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer'
+                    ? 'bg-brand-cyan text-slate-950 font-extrabold px-4 py-1.5 rounded-full text-xs transition-all cursor-pointer shadow-md'
                     : 'bg-brand-card text-muted hover:text-main px-4 py-1.5 rounded-full text-xs font-bold border border-brand-border transition-all cursor-pointer'
                 }
               >
