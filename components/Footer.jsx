@@ -67,11 +67,6 @@ export default function Footer() {
             <h4 className="text-main font-bold mb-4 text-sm uppercase tracking-wider">{t('quickNavigation')}</h4>
             <ul className="space-y-2.5 text-xs">
               <li>
-                <Link href="/" className="hover:text-brand-cyan transition-colors flex items-center gap-2">
-                  <ChevronRight className="w-3.5 h-3.5 text-brand-cyan" /> {t('home')}
-                </Link>
-              </li>
-              <li>
                 <Link href="/about" className="hover:text-brand-cyan transition-colors flex items-center gap-2">
                   <ChevronRight className="w-3.5 h-3.5 text-brand-cyan" /> {t('about')}
                 </Link>
