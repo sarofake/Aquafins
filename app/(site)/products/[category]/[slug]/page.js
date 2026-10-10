@@ -1,12 +1,13 @@
 import { cache } from 'react';
 import { notFound, redirect } from 'next/navigation';
+import { unstable_cache } from 'next/cache';
 import { supabase } from '@/lib/supabase';
 import { productHref } from '@/lib/slugify';
 import ProductPageView from '@/components/ProductPageView';
 
 import { slugify } from '@/lib/slugify';
 
-const getProductBySlug = cache(async (slug) => {
+const fetchProductBySlug = async (slug) => {
   if (!supabase || !slug) return null;
 
   // 1. Try DB lookup by slug column
@@ -37,7 +38,16 @@ const getProductBySlug = cache(async (slug) => {
   }
 
   return null;
-});
+};
+
+// Cache product lookups across requests so repeat product views don't hit the
+// database. Refreshed every 5 min and on admin edits (revalidateTag('products')).
+const getProductBySlug = cache(
+  unstable_cache(fetchProductBySlug, ['product-by-slug'], {
+    revalidate: 300,
+    tags: ['products'],
+  })
+);
 
 
 export async function generateMetadata({ params }) {

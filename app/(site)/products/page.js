@@ -39,7 +39,7 @@ function ProductsCatalogContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { lang, t } = useLanguage();
-  const { products: productsData, loading } = useProducts();
+  const { products: productsData, loading } = useProducts({ all: true });
   const { categories: dbCategories } = useCategories();
 
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -192,6 +192,14 @@ function ProductsCatalogContent() {
             ))}
           </div>
         )}
+
+        {/* Results count */}
+        <div className="flex items-center gap-2 mb-6">
+          <span className="inline-flex items-center gap-1.5 bg-brand-card border border-brand-border rounded-full px-3.5 py-1.5 text-xs font-bold text-main">
+            <ShoppingBag className="w-3.5 h-3.5 text-brand-cyan" />
+            {filteredProducts.length} {t('products')}
+          </span>
+        </div>
 
         {/* Products Grid */}
         {loading ? (

@@ -2,29 +2,34 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { getClientCachedItem, setClientCachedItem } from '@/lib/clientCache';
 
-// In-memory client cache to prevent repetitive DB/API calls on client navigation
-const clientProductCache = new Map();
-const CLIENT_CACHE_TTL_MS = 2 * 60 * 1000; // 2 minutes
+const CLIENT_CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutes browser cache
 
 export function useProducts(options = {}) {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  // Extract limit and ensure it is strictly clamped between 10 and 50 (default: 15)
+  const isAll = options?.all === true || (typeof options === 'object' && options?.all === '1');
   const rawLimit = typeof options === 'number' ? options : options?.limit;
-  const limit = Math.min(Math.max(Number(rawLimit) || 15, 10), 50);
+  const limit = isAll ? 500 : Math.min(Math.max(Number(rawLimit) || 100, 1), 500);
   const category = typeof options === 'object' && options?.category ? options.category : 'all';
   const deals = typeof options === 'object' && options?.deals ? true : false;
+  const cacheKey = `products_${category}_${deals}_${isAll ? 'all' : limit}`;
+
+  // Initialize with cached data if available (0ms render without flickering)
+  const [products, setProducts] = useState(() => {
+    return getClientCachedItem(cacheKey, CLIENT_CACHE_TTL_MS) || [];
+  });
+  const [loading, setLoading] = useState(() => {
+    const cached = getClientCachedItem(cacheKey, CLIENT_CACHE_TTL_MS);
+    return !cached || cached.length === 0;
+  });
 
   useEffect(() => {
     let cancelled = false;
-    const cacheKey = `products_${category}_${deals}_${limit}`;
 
-    // Check client-side cache first to avoid hitting server/DB on navigation
-    const cached = clientProductCache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < CLIENT_CACHE_TTL_MS) {
-      setProducts(cached.data);
+    // Check client-side persistent cache
+    const cached = getClientCachedItem(cacheKey, CLIENT_CACHE_TTL_MS);
+    if (cached && cached.length > 0) {
+      setProducts(cached);
       setLoading(false);
       return;
     }
@@ -34,7 +39,12 @@ export function useProducts(options = {}) {
     async function fetchProducts() {
       // 1. Try serverless function endpoint first
       try {
-        const queryParams = new URLSearchParams({ limit: String(limit) });
+        const queryParams = new URLSearchParams();
+        if (isAll) {
+          queryParams.set('all', '1');
+        } else {
+          queryParams.set('limit', String(limit));
+        }
         if (category !== 'all') queryParams.set('category', category);
         if (deals) queryParams.set('deals', 'true');
 
@@ -44,7 +54,7 @@ export function useProducts(options = {}) {
           if (!cancelled) {
             const list = json.products || [];
             setProducts(list);
-            clientProductCache.set(cacheKey, { data: list, timestamp: Date.now() });
+            setClientCachedItem(cacheKey, list);
             setLoading(false);
             return;
           }
@@ -53,7 +63,7 @@ export function useProducts(options = {}) {
         console.warn('Serverless products API fetch failed, falling back to direct Supabase query:', err);
       }
 
-      // 2. Direct Supabase client query with database limit 10-15 fallback
+      // 2. Direct Supabase client query fallback
       if (!supabase) {
         if (!cancelled) setLoading(false);
         return;
@@ -64,8 +74,11 @@ export function useProducts(options = {}) {
           .from('products')
           .select('*')
           .order('featured', { ascending: false })
-          .order('created_at', { ascending: false })
-          .limit(limit);
+          .order('created_at', { ascending: false });
+
+        if (!isAll) {
+          query = query.limit(limit);
+        }
 
         if (category && category !== 'all') {
           query = query.eq('category', category);
@@ -82,7 +95,7 @@ export function useProducts(options = {}) {
             setProducts([]);
           } else if (data) {
             setProducts(data);
-            clientProductCache.set(cacheKey, { data, timestamp: Date.now() });
+            setClientCachedItem(cacheKey, data);
           }
           setLoading(false);
         }
@@ -106,7 +119,7 @@ export function useProducts(options = {}) {
     return () => {
       cancelled = true;
     };
-  }, [limit, category, deals]);
+  }, [limit, category, deals, isAll]);
 
   return { products, loading };
 }

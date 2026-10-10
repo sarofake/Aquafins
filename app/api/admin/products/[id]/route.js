@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { requireAuth, requireSupabase, sanitizeProduct, ensureUniqueSlug } from '@/lib/adminHelpers';
 import { invalidateCache } from '@/lib/cache';
 
@@ -66,6 +67,7 @@ export async function PUT(req, { params }) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
     invalidateCache('products');
+    revalidateTag('products');
     return NextResponse.json({ product: data });
   } catch (err) {
     console.error('Error in PUT /api/admin/products/[id]:', err);
@@ -89,5 +91,6 @@ export async function DELETE(req, { params }) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
   invalidateCache('products');
+  revalidateTag('products');
   return NextResponse.json({ ok: true });
 }

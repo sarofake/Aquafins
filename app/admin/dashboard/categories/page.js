@@ -7,6 +7,10 @@ import {
 } from 'lucide-react';
 import DescriptionInput from '@/components/DescriptionInput';
 import FormattedText from '@/components/FormattedText';
+import { fetchWithCache } from '@/lib/fetchCache';
+import { invalidateAdminAndCatalog } from '@/lib/clientCache';
+
+const ADMIN_TTL_MS = 5 * 60 * 1000;
 
 const EMPTY_FORM = { name: '', name_bn: '', slug: '', parent_id: '', description: '', description_bn: '', image: '', image_public_id: '', icon: 'Grid', sort_order: '0' };
 
@@ -26,8 +30,8 @@ export default function CategoriesPage() {
   const motherCategories = categories.filter((c) => !c.parent_id);
   const getSubCategories = (motherId) => categories.filter((c) => c.parent_id === motherId);
 
-  const loadData = useCallback(async () => {
-    setLoading(true); try { const res = await fetch('/api/admin/categories'); const data = await res.json(); setCategories(data.categories || []); } catch (e) { setErrorMsg(e.message); } finally { setLoading(false); }
+  const loadData = useCallback(async (force = false) => {
+    setLoading(true); try { const data = await fetchWithCache('/api/admin/categories', 'admin_categories', ADMIN_TTL_MS, { force }); setCategories(data.categories || []); } catch (e) { setErrorMsg(e.message); } finally { setLoading(false); }
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
@@ -47,14 +51,14 @@ export default function CategoriesPage() {
   const handleSubmit = async (e) => {
     e.preventDefault(); setSaving(true); try {
       const res = await fetch(editingId ? `/api/admin/categories/${editingId}` : '/api/admin/categories', { method: editingId ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
-      const data = await res.json(); if (!res.ok) throw new Error(data.error); setFormOpen(false); setSuccessMsg(editingId ? 'Category updated!' : 'Category created!'); loadData();
+      const data = await res.json(); if (!res.ok) throw new Error(data.error); setFormOpen(false); setSuccessMsg(editingId ? 'Category updated!' : 'Category created!'); invalidateAdminAndCatalog(); loadData();
     } catch (err) { setErrorMsg(err.message); } finally { setSaving(false); }
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this category? All sub-categories will also be deleted!')) return; setSaving(true); try {
       const res = await fetch(`/api/admin/categories/${id}`, { method: 'DELETE' }); const data = await res.json();
-      if (!res.ok) throw new Error(data.error); setSuccessMsg('Category deleted'); loadData();
+      if (!res.ok) throw new Error(data.error); setSuccessMsg('Category deleted'); invalidateAdminAndCatalog(); loadData();
     } catch (err) { setErrorMsg(err.message); } finally { setSaving(false); }
   };
 

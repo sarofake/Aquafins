@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Package, FolderTree, Sliders, Settings, Loader2 } from 'lucide-react';
 import DashboardCharts from '@/components/admin/DashboardCharts';
+import { fetchWithCache } from '@/lib/fetchCache';
+
+const COUNTS_TTL_MS = 60 * 1000;
 
 export default function DashboardOverviewPage() {
   const [stats, setStats] = useState({
@@ -17,8 +20,7 @@ export default function DashboardOverviewPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/admin/counts')
-      .then((r) => r.json())
+    fetchWithCache('/api/admin/counts', 'admin_counts', COUNTS_TTL_MS)
       .then((data) => {
         setStats({
           products: data.products || 0,

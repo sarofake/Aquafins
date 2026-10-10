@@ -4,21 +4,35 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ShoppingCart, ChevronLeft, ChevronRight, Compass } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import { getClientCachedItem, setClientCachedItem } from '@/lib/clientCache';
+
+const HERO_CACHE_KEY = 'hero_slides_public';
+const HERO_CACHE_TTL_MS = 10 * 60 * 1000;
 
 export default function Hero() {
   const { lang, t } = useLanguage();
-  const [slides, setSlides] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [slides, setSlides] = useState(() => getClientCachedItem(HERO_CACHE_KEY, HERO_CACHE_TTL_MS) || []);
+  const [loading, setLoading] = useState(() => !getClientCachedItem(HERO_CACHE_KEY, HERO_CACHE_TTL_MS));
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Fetch dynamic hero slides from API
+  // Fetch dynamic hero slides from API (cached in cookie/localStorage)
   useEffect(() => {
     let active = true;
+
+    const cached = getClientCachedItem(HERO_CACHE_KEY, HERO_CACHE_TTL_MS);
+    if (cached) {
+      setSlides(cached);
+      setLoading(false);
+      return;
+    }
+
     fetch('/api/hero')
       .then((r) => r.json())
       .then((data) => {
         if (active) {
-          setSlides(data.slides || []);
+          const list = data.slides || [];
+          setSlides(list);
+          setClientCachedItem(HERO_CACHE_KEY, list);
           setLoading(false);
         }
       })

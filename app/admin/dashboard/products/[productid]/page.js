@@ -5,6 +5,10 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Loader2, Package, AlertCircle, Trash2 } from 'lucide-react';
 import ProductForm from '@/components/admin/ProductForm';
+import { fetchWithCache } from '@/lib/fetchCache';
+import { invalidateAdminAndCatalog } from '@/lib/clientCache';
+
+const ADMIN_TTL_MS = 5 * 60 * 1000;
 
 export default function ProductEditPage() {
   const { productid } = useParams();
@@ -16,17 +20,17 @@ export default function ProductEditPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [deleting, setDeleting] = useState(false);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (force = false) => {
     setLoading(true);
     try {
-      const [pRes, cRes] = await Promise.all([
-        fetch(`/api/admin/products/${productid}`),
-        fetch('/api/admin/categories'),
-      ]);
-      if (pRes.status === 404) { setNotFound(true); setProduct(null); return; }
-      const pData = await pRes.json();
-      if (!pRes.ok) throw new Error(pData.error || 'Failed to load product');
-      const cData = await cRes.json();
+      let pData;
+      try {
+        pData = await fetchWithCache(`/api/admin/products/${productid}`, `admin_product_${productid}`, ADMIN_TTL_MS, { force });
+      } catch (err) {
+        if (err.status === 404) { setNotFound(true); setProduct(null); return; }
+        throw err;
+      }
+      const cData = await fetchWithCache('/api/admin/categories', 'admin_categories', ADMIN_TTL_MS, { force });
       setProduct(pData.product);
       setCategories(cData.categories || []);
       setNotFound(false);
@@ -46,6 +50,7 @@ export default function ProductEditPage() {
       const res = await fetch(`/api/admin/products/${productid}`, { method: 'DELETE' });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
+      invalidateAdminAndCatalog();
       router.push('/admin/dashboard/products');
     } catch (err) {
       setErrorMsg(err.message);
@@ -111,7 +116,7 @@ export default function ProductEditPage() {
           key={product.id}
           product={product}
           categories={categories}
-          onSaved={() => router.push('/admin/dashboard/products')}
+          onSaved={() => { invalidateAdminAndCatalog(); router.push('/admin/dashboard/products'); }}
           onCancel={() => router.push('/admin/dashboard/products')}
         />
       </div>

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 export async function POST(request) {
   try {
@@ -14,10 +15,11 @@ export async function POST(request) {
       );
     }
 
-    // Insert into Supabase if configured
-    if (supabase) {
+    // Insert into Supabase if configured (prefers admin client to bypass RLS)
+    const dbClient = supabaseAdmin || supabase;
+    if (dbClient) {
       try {
-        const { error } = await supabase.from('contact_messages').insert([
+        const { error } = await dbClient.from('contact_messages').insert([
           {
             name: name.trim(),
             phone: phone.trim(),

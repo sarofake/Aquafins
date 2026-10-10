@@ -39,7 +39,7 @@ function DealsCatalogContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { lang, t } = useLanguage();
-  const { products: allProducts, loading } = useProducts({ deals: true, limit: 50 });
+  const { products: allProducts, loading } = useProducts({ deals: true, all: true });
   const { categories: dbCategories } = useCategories();
 
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -172,6 +172,14 @@ function DealsCatalogContent() {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Results count */}
+        <div className="flex items-center gap-2 mb-6">
+          <span className="inline-flex items-center gap-1.5 bg-brand-card border border-amber-500/40 rounded-full px-3.5 py-1.5 text-xs font-bold text-main">
+            <Tag className="w-3.5 h-3.5 text-amber-400" />
+            {filteredProducts.length} {t('products')}
+          </span>
         </div>
 
         {/* Products Grid */}

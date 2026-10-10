@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { requireAuth, requireSupabase, sanitizeProduct, ensureUniqueSlug } from '@/lib/adminHelpers';
 import { invalidateCache } from '@/lib/cache';
 
@@ -70,6 +71,7 @@ export async function POST(req) {
     }
 
     invalidateCache('products');
+    revalidateTag('products');
     return NextResponse.json({ product: data }, { status: 201 });
   } catch (err) {
     console.error('Error in POST /api/admin/products:', err);

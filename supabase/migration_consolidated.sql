@@ -1,181 +1,187 @@
 -- =============================================================================
--- Aqua Fins — Consolidated Database Schema (Serverless-Optimized)
--- Run this ONCE on a fresh Supabase project. For existing DB, see notes below.
+-- Aqua Fins Bangladesh — Consolidated Optimized Database Schema
+--
+-- Performance & Safety Highlights:
+-- 1. Zero data loss: All operations use IF NOT EXISTS / ON CONFLICT.
+-- 2. Performance-tuned indexes: Covering indexes for fast client catalog & search.
+-- 3. Row-Level Security (RLS): Enabled with public read policies.
 -- =============================================================================
 
-begin;
+BEGIN;
 
 -- ---------------------------------------------------------------------------
--- 1. categories (mother + sub-categories via parent_id)
+-- 1. categories (Mother categories + sub-categories)
 -- ---------------------------------------------------------------------------
-create table if not exists public.categories (
-  id              bigint generated always as identity primary key,
-  name            text not null,
-  name_bn         text not null default '',
-  slug            text not null unique,
-  icon            text not null default 'Fish',
-  description     text not null default '',
-  description_bn  text not null default '',
-  parent_id       bigint references public.categories(id) on delete set null,
-  image           text not null default '',
-  image_public_id text not null default '',
-  sort_order      integer not null default 0,
-  created_at      timestamptz not null default now()
+CREATE TABLE IF NOT EXISTS public.categories (
+  id              BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  name            TEXT NOT NULL,
+  name_bn         TEXT NOT NULL DEFAULT '',
+  slug            TEXT NOT NULL UNIQUE,
+  icon            TEXT NOT NULL DEFAULT 'Fish',
+  description     TEXT NOT NULL DEFAULT '',
+  description_bn  TEXT NOT NULL DEFAULT '',
+  parent_id       BIGINT REFERENCES public.categories(id) ON DELETE SET NULL,
+  image           TEXT NOT NULL DEFAULT '',
+  image_public_id TEXT NOT NULL DEFAULT '',
+  sort_order      INTEGER NOT NULL DEFAULT 0,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-create index if not exists categories_parent_idx   on public.categories (parent_id);
-create index if not exists categories_sort_idx     on public.categories (sort_order);
+CREATE INDEX IF NOT EXISTS categories_parent_idx   ON public.categories (parent_id);
+CREATE INDEX IF NOT EXISTS categories_sort_idx     ON public.categories (sort_order ASC);
+CREATE INDEX IF NOT EXISTS categories_slug_idx     ON public.categories (slug);
 
 -- ---------------------------------------------------------------------------
--- 2. products (serverless-friendly with proper indexes)
+-- 2. products (Full catalog with pricing, stock & media)
 -- ---------------------------------------------------------------------------
-create table if not exists public.products (
-  id              bigint generated always as identity primary key,
-  name            text not null,
-  name_bn         text not null default '',
-  slug            text not null,
-  category        text not null default '',
-  category_id     bigint references public.categories(id) on delete set null,
-  price           numeric(10,2) not null,
-  original_price  numeric(10,2),
-  description     text not null default '',
-  description_bn  text not null default '',
-  image           text not null default '',
-  images          jsonb not null default '[]'::jsonb,
-  image_public_id text not null default '',
-  keywords        text not null default '',
-  quantity        text not null default '',
-  quantity_bn     text not null default '',
-  featured        boolean not null default false,
-  deals           boolean not null default false,
-  available       boolean not null default true,
-  updated_at      timestamptz not null default now(),
-  created_at      timestamptz not null default now()
+CREATE TABLE IF NOT EXISTS public.products (
+  id              BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  name            TEXT NOT NULL,
+  name_bn         TEXT NOT NULL DEFAULT '',
+  slug            TEXT NOT NULL,
+  category        TEXT NOT NULL DEFAULT '',
+  category_id     BIGINT REFERENCES public.categories(id) ON DELETE SET NULL,
+  price           NUMERIC(10,2) NOT NULL,
+  original_price  NUMERIC(10,2),
+  description     TEXT NOT NULL DEFAULT '',
+  description_bn  TEXT NOT NULL DEFAULT '',
+  image           TEXT NOT NULL DEFAULT '',
+  images          JSONB NOT NULL DEFAULT '[]'::jsonb,
+  image_public_id TEXT NOT NULL DEFAULT '',
+  keywords        TEXT NOT NULL DEFAULT '',
+  quantity        TEXT NOT NULL DEFAULT '',
+  quantity_bn     TEXT NOT NULL DEFAULT '',
+  featured        BOOLEAN NOT NULL DEFAULT false,
+  deals           BOOLEAN NOT NULL DEFAULT false,
+  available       BOOLEAN NOT NULL DEFAULT true,
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Query-optimized indexes (covers all public + admin queries)
-create unique index if not exists products_slug_key    on public.products (slug);
-create index if not exists products_category_idx      on public.products (category);
-create index if not exists products_category_id_idx   on public.products (category_id);
-create index if not exists products_featured_idx      on public.products (featured) where featured is true;
-create index if not exists products_deals_idx         on public.products (deals) where deals is true;
-create index if not exists products_available_idx     on public.products (available);
-create index if not exists products_created_at_idx    on public.products (created_at desc);
-create index if not exists products_available_created on public.products (available, created_at desc);
-
--- GIN index for JSONB image queries
-create index if not exists products_images_idx on public.products using gin (images);
+-- Query-optimized composite and partial indexes
+CREATE UNIQUE INDEX IF NOT EXISTS products_slug_key       ON public.products (slug);
+CREATE INDEX IF NOT EXISTS products_category_idx         ON public.products (category);
+CREATE INDEX IF NOT EXISTS products_category_id_idx      ON public.products (category_id);
+CREATE INDEX IF NOT EXISTS products_featured_sort_idx    ON public.products (featured DESC, created_at DESC);
+CREATE INDEX IF NOT EXISTS products_deals_sort_idx       ON public.products (deals, created_at DESC) WHERE deals IS TRUE;
+CREATE INDEX IF NOT EXISTS products_available_idx        ON public.products (available);
+CREATE INDEX IF NOT EXISTS products_created_at_idx       ON public.products (created_at DESC);
+CREATE INDEX IF NOT EXISTS products_images_gin_idx       ON public.products USING GIN (images);
 
 -- ---------------------------------------------------------------------------
--- 3. hero_slides (carousel banners)
+-- 3. hero_slides (Top Homepage Carousel Banners)
 -- ---------------------------------------------------------------------------
-create table if not exists public.hero_slides (
-  id              bigint generated always as identity primary key,
-  title           text not null,
-  title_bn        text not null default '',
-  subtitle        text not null default '',
-  subtitle_bn     text not null default '',
-  badge           text not null default '',
-  badge_bn        text not null default '',
-  image           text not null default '',
-  image_public_id text not null default '',
-  button_text     text not null default 'Explore Catalog',
-  button_text_bn  text not null default '',
-  button_link     text not null default '/products',
-  sort_order      integer not null default 0,
-  active          boolean not null default true,
-  created_at      timestamptz not null default now(),
-  updated_at      timestamptz not null default now()
+CREATE TABLE IF NOT EXISTS public.hero_slides (
+  id              BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  title           TEXT NOT NULL,
+  title_bn        TEXT NOT NULL DEFAULT '',
+  subtitle        TEXT NOT NULL DEFAULT '',
+  subtitle_bn     TEXT NOT NULL DEFAULT '',
+  badge           TEXT NOT NULL DEFAULT '',
+  badge_bn        TEXT NOT NULL DEFAULT '',
+  image           TEXT NOT NULL DEFAULT '',
+  image_public_id TEXT NOT NULL DEFAULT '',
+  button_text     TEXT NOT NULL DEFAULT 'Explore Catalog',
+  button_text_bn  TEXT NOT NULL DEFAULT '',
+  button_link     TEXT NOT NULL DEFAULT '/products',
+  sort_order      INTEGER NOT NULL DEFAULT 0,
+  active          BOOLEAN NOT NULL DEFAULT true,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-create index if not exists hero_slides_active_sort on public.hero_slides (active, sort_order) where active is true;
+CREATE INDEX IF NOT EXISTS hero_slides_active_sort ON public.hero_slides (sort_order ASC, created_at DESC) WHERE active IS TRUE;
 
 -- ---------------------------------------------------------------------------
--- 4. site_info (key/value store for site-wide config)
+-- 4. site_info (Key-Value configuration & announcement metadata)
 -- ---------------------------------------------------------------------------
-create table if not exists public.site_info (
-  key         text primary key,
-  value       text not null default '',
-  updated_at  timestamptz not null default now()
+CREATE TABLE IF NOT EXISTS public.site_info (
+  key         TEXT PRIMARY KEY,
+  value       TEXT NOT NULL DEFAULT '',
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 -- ---------------------------------------------------------------------------
--- 5. Row Level Security (public read-only, admin writes via service role)
+-- 5. contact_messages (Customer inquiries & order inquiries)
 -- ---------------------------------------------------------------------------
-alter table public.categories   enable row level security;
-alter table public.products     enable row level security;
-alter table public.hero_slides  enable row level security;
-alter table public.site_info    enable row level security;
+CREATE TABLE IF NOT EXISTS public.contact_messages (
+  id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  name        TEXT NOT NULL,
+  phone       TEXT NOT NULL,
+  email       TEXT NOT NULL DEFAULT '',
+  topic       TEXT NOT NULL DEFAULT 'General Inquiry',
+  message     TEXT NOT NULL,
+  status      TEXT NOT NULL DEFAULT 'unread',
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS contact_messages_created_idx ON public.contact_messages (created_at DESC);
+CREATE INDEX IF NOT EXISTS contact_messages_status_idx  ON public.contact_messages (status);
+
+-- ---------------------------------------------------------------------------
+-- 6. Row Level Security (RLS) Policies
+-- ---------------------------------------------------------------------------
+ALTER TABLE public.categories        ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.products          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.hero_slides       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.site_info         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.contact_messages  ENABLE ROW LEVEL SECURITY;
 
 -- Public read policies
-drop policy if exists "categories public read" on public.categories;
-create policy "categories public read" on public.categories for select using (true);
+DROP POLICY IF EXISTS "categories public read" ON public.categories;
+CREATE POLICY "categories public read" ON public.categories FOR SELECT USING (true);
 
-drop policy if exists "products public read" on public.products;
-create policy "products public read" on public.products for select using (true);
+DROP POLICY IF EXISTS "products public read" ON public.products;
+CREATE POLICY "products public read" ON public.products FOR SELECT USING (true);
 
-drop policy if exists "hero_slides public read" on public.hero_slides;
-create policy "hero_slides public read" on public.hero_slides for select using (true);
+DROP POLICY IF EXISTS "hero_slides public read" ON public.hero_slides;
+CREATE POLICY "hero_slides public read" ON public.hero_slides FOR SELECT USING (true);
 
-drop policy if exists "site_info public read" on public.site_info;
-create policy "site_info public read" on public.site_info for select using (true);
+DROP POLICY IF EXISTS "site_info public read" ON public.site_info;
+CREATE POLICY "site_info public read" ON public.site_info FOR SELECT USING (true);
+
+-- Public write policy for contact messages
+DROP POLICY IF EXISTS "contact_messages public insert" ON public.contact_messages;
+CREATE POLICY "contact_messages public insert" ON public.contact_messages FOR INSERT WITH CHECK (true);
 
 -- ---------------------------------------------------------------------------
--- 6. Seed data
+-- 7. Seed Initial Baseline Data (Safe & Idempotent)
 -- ---------------------------------------------------------------------------
 
 -- Mother categories
-insert into public.categories (name, slug, icon, description, sort_order)
-values
+INSERT INTO public.categories (name, slug, icon, description, sort_order)
+VALUES
   ('Plants',             'plants',            'Leaf',     'Live Aquatic Plants & Moss',                 1),
   ('Fish',               'fish',              'Fish',     'Bettas & Exotic Freshwater Fish',           2),
   ('Livestock',          'livestock',         'Shell',    'Shrimps, Snails & Invertebrates',           3),
   ('Food & Accessories', 'food-accessories',  'Utensils', 'Pellets, Flakes, Filters & LED Lighting', 4),
   ('Scaping',            'scaping',           'Mountain', 'Aquascaping Rocks, Driftwood & Substrates', 5),
   ('Combo',              'combo',             'Package',  'Bundle deals and combo packs',               6)
-on conflict (slug) do update set
-  name = excluded.name,
-  icon = excluded.icon,
-  description = excluded.description,
-  sort_order = excluded.sort_order;
+ON CONFLICT (slug) DO UPDATE SET
+  icon = EXCLUDED.icon,
+  sort_order = EXCLUDED.sort_order;
 
--- Site info defaults
-insert into public.site_info (key, value) values
-  ('site_name',        'Aqua Fins Bangladesh'),
-  ('site_tagline',     'Premium Aquatics & Supplies'),
-  ('site_description', 'Discover hand-picked collection of state-of-the-art aquariums, exotic livestock, aquatic plants, and premium supplies across Bangladesh.'),
-  ('logo_url',         ''),
-  ('favicon_url',      ''),
-  ('phone_primary',    '+880 1XXX-XXXXXX'),
-  ('phone_secondary',  ''),
-  ('whatsapp',         '+880 1XXX-XXXXXX'),
-  ('email',            'info@aquafins.com'),
-  ('email_support',    'support@aquafins.com'),
-  ('address',          ''),
-  ('address_bn',       ''),
-  ('city',             'Dhaka'),
-  ('country',          'Bangladesh'),
-  ('facebook',         ''),
-  ('instagram',        ''),
-  ('youtube',          ''),
-  ('tiktok',           ''),
-  ('twitter',          ''),
-  ('business_hours',   'Sat-Thu: 10AM - 9PM'),
-  ('business_hours_bn','শনি-বৃহঃ: সকাল ১০টা - রাত ৯টা'),
-  ('map_embed_url',    ''),
-  ('primary_color',    '#00f2fe'),
-  ('secondary_color',  '#0284c7'),
-  ('currency',         '৳'),
-  ('currency_code',    'BDT'),
-  ('min_order_amount', '500'),
-  ('delivery_info',    'Free delivery on orders over ৳1000 within Dhaka'),
-  ('delivery_info_bn', 'ঢাকার ভেতরে ৳১০০০ এর অধিক অর্ডারে ফ্রি ডেলিভারি'),
-  ('return_policy',    '7-day return policy for unused items'),
-  ('return_policy_bn', 'অব্যবহৃত পণ্যের জন্য ৭ দিনের রিটার্ন পলিসি'),
-  ('about_us',         'We are a team of passionate aquarists dedicated to bringing you the best aquatic life and supplies.'),
-  ('about_us_bn',     'আমরা উত্সাহী একুয়ারিস্টদের একটি দল যারা আপনাকে সেরা একুয়াটিক লাইফ এবং সাপ্লাই আনতে প্রতিশ্রুতিবদ্ধ।')
-on conflict (key) do update set
-  value = excluded.value,
+-- Site info and Announcement defaults
+INSERT INTO public.site_info (key, value) VALUES
+  ('site_name',             'Aqua Fins Bangladesh'),
+  ('site_tagline',          'Premium Aquatics & Supplies'),
+  ('site_description',      'Discover hand-picked collection of state-of-the-art aquariums, exotic livestock, aquatic plants, and premium supplies across Bangladesh.'),
+  ('announcement_enabled',   'true'),
+  ('announcement_badge',     'SPECIAL OFFER'),
+  ('announcement_badge_bn',  'বিশেষ অফার'),
+  ('announcement_text',      '🎉 Welcome to Aqua Fins Bangladesh! Free delivery on all Plant & Shrimp Combo orders over ৳1500 this week! | Discover our premium aquatic plants, exotic fish & accessories.'),
+  ('announcement_text_bn',   '🎉 অ্যাকুয়া ফিন্স বাংলাদেশে স্বাগতম! এই সপ্তাহে ১৫০০ টাকার বেশি কম্বো অর্ডারে ফ্রি ডেলিভারি! | আমাদের এক্সক্লুসিভ লাইভস্টক ও প্ল্যান্ট কালেকশন দেখুন।'),
+  ('announcement_link',      '/products?category=combo'),
+  ('currency',              '৳'),
+  ('currency_code',         'BDT'),
+  ('min_order_amount',      '500')
+ON CONFLICT (key) DO UPDATE SET
+  value = CASE
+    WHEN public.site_info.value = '' THEN EXCLUDED.value
+    ELSE public.site_info.value
+  END,
   updated_at = now();
 
-commit;
+COMMIT;

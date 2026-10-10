@@ -1,19 +1,27 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { getClientCachedItem, setClientCachedItem } from '@/lib/clientCache';
 
-const clientCategoriesCache = { data: null, timestamp: 0 };
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
 export function useCategories() {
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const cacheKey = 'categories_all';
+
+  const [categories, setCategories] = useState(() => {
+    return getClientCachedItem(cacheKey, CACHE_TTL_MS) || [];
+  });
+  const [loading, setLoading] = useState(() => {
+    const cached = getClientCachedItem(cacheKey, CACHE_TTL_MS);
+    return !cached || cached.length === 0;
+  });
 
   useEffect(() => {
     let active = true;
 
-    if (clientCategoriesCache.data && Date.now() - clientCategoriesCache.timestamp < CACHE_TTL_MS) {
-      setCategories(clientCategoriesCache.data);
+    const cached = getClientCachedItem(cacheKey, CACHE_TTL_MS);
+    if (cached && Array.isArray(cached) && cached.length > 0) {
+      setCategories(cached);
       setLoading(false);
       return;
     }
@@ -23,8 +31,7 @@ export function useCategories() {
       .then((data) => {
         if (active && Array.isArray(data.categories)) {
           setCategories(data.categories);
-          clientCategoriesCache.data = data.categories;
-          clientCategoriesCache.timestamp = Date.now();
+          setClientCachedItem(cacheKey, data.categories);
         }
       })
       .catch((err) => {

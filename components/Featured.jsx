@@ -31,6 +31,10 @@ export default function Featured() {
           <h2 className="text-3xl md:text-4xl font-display font-bold text-main">
             {t('featuredProducts')}
           </h2>
+          <span className="mt-3 inline-flex items-center gap-1.5 bg-brand-card border border-brand-border rounded-full px-3.5 py-1.5 text-xs font-bold text-main">
+            <ShoppingBag className="w-3.5 h-3.5 text-brand-cyan" />
+            {featuredProducts.length} {t('products')}
+          </span>
         </div>
         <Link
           href="/products"

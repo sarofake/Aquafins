@@ -4,9 +4,34 @@ import { useState, useEffect, useRef } from 'react';
 import {
   Save, Loader2, CheckCircle, AlertCircle, Phone, MapPin, Share2, Clock,
   Palette, Truck, Info, Building2, UploadCloud, Image as ImageIcon, Check, X,
+  Megaphone,
 } from 'lucide-react';
+import { fetchWithCache } from '@/lib/fetchCache';
+import { clearClientCache } from '@/lib/clientCache';
+
+const ADMIN_TTL_MS = 5 * 60 * 1000;
 
 const SECTIONS = [
+  {
+    title: 'Announcement Banner',
+    icon: Megaphone,
+    fields: [
+      {
+        key: 'announcement_enabled',
+        label: 'Announcement Status',
+        type: 'select',
+        options: [
+          { value: 'true', label: 'Enabled (Visible on Homepage)' },
+          { value: 'false', label: 'Disabled (Hidden)' },
+        ],
+      },
+      { key: 'announcement_badge', label: 'Badge Label (English)', placeholder: 'ANNOUNCEMENT or SPECIAL OFFER' },
+      { key: 'announcement_badge_bn', label: 'Badge Label (Bangla - Optional)', placeholder: 'বিজ্ঞপ্তি বা বিশেষ অফার' },
+      { key: 'announcement_text', label: 'Announcement Text (English)', type: 'textarea', placeholder: 'Free delivery on all plant combo orders this week! | Special discount on shrimp packs.' },
+      { key: 'announcement_text_bn', label: 'Announcement Text (Bangla - Optional)', type: 'textarea', placeholder: 'এই সপ্তাহে সকল প্ল্যান্ট কম্বো অর্ডারে ফ্রি ডেলিভারি!' },
+      { key: 'announcement_link', label: 'Action Button / Link URL (Optional)', placeholder: 'e.g. /deals or /products?category=combo' },
+    ],
+  },
   {
     title: 'General',
     icon: Building2,
@@ -202,8 +227,7 @@ export default function SiteInfoPage() {
   const [activeSection, setActiveSection] = useState(0);
 
   useEffect(() => {
-    fetch('/api/admin/site-info')
-      .then((r) => r.json())
+    fetchWithCache('/api/admin/site-info', 'admin_site_info', ADMIN_TTL_MS)
       .then((d) => { if (d.info) setInfo(d.info); })
       .catch(() => setErrorMsg('Failed to load site info'))
       .finally(() => setLoading(false));
@@ -231,6 +255,7 @@ export default function SiteInfoPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Save failed');
       setSuccessMsg('Site information saved successfully!');
+      clearClientCache('admin_site_info');
     } catch (err) { setErrorMsg(err.message); } finally { setSaving(false); }
   };
 
@@ -343,6 +368,18 @@ export default function SiteInfoPage() {
                       className="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-cyan-600 focus:bg-white"
                     />
                   </div>
+                ) : field.type === 'select' ? (
+                  <select
+                    value={info[field.key] || (field.options && field.options[0]?.value) || ''}
+                    onChange={(e) => handleChange(field.key, e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-cyan-600 focus:bg-white cursor-pointer"
+                  >
+                    {field.options?.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
                 ) : (
                   <input
                     type="text"

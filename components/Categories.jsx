@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Fish, Leaf, Utensils, Shell, Mountain, ChevronLeft, ChevronRight, Grid, Package } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTheme } from '@/context/ThemeContext';
+import { useCategories } from '@/hooks/useCategories';
 import FormattedText from '@/components/FormattedText';
 
 const DEFAULT_CATEGORIES = [
@@ -73,37 +74,26 @@ const DEFAULT_CATEGORIES = [
 export default function Categories() {
   const { lang, t } = useLanguage();
   const { resolvedTheme } = useTheme();
-  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+  const { categories: dbCategories } = useCategories();
 
-  useEffect(() => {
-    let active = true;
-    fetch('/api/categories')
-      .then((r) => r.json())
-      .then((data) => {
-        if (active && data.categories && data.categories.length > 0) {
-          const mapped = data.categories.map((c) => {
-            const fallback = DEFAULT_CATEGORIES.find((d) => d.slug === c.slug) || {};
-            return {
-              id: c.id,
-              slug: c.slug,
-              name: c.name,
-              name_bn: c.name_bn,
-              description: c.description || fallback.description || '',
-              description_bn: c.description_bn,
-              image: c.image || '',
-              icon: fallback.icon || Grid,
-              color: fallback.color || 'text-brand-cyan',
-              bgColor: fallback.bgColor || 'bg-brand-cyan/10',
-            };
-          });
-          setCategories(mapped);
-        }
+  const categories = (dbCategories.length > 0
+    ? dbCategories.filter((c) => !c.parent_id).map((c) => {
+        const fallback = DEFAULT_CATEGORIES.find((d) => d.slug === c.slug) || {};
+        return {
+          id: c.id,
+          slug: c.slug,
+          name: c.name,
+          name_bn: c.name_bn,
+          description: c.description || fallback.description || '',
+          description_bn: c.description_bn,
+          image: c.image || '',
+          icon: fallback.icon || Grid,
+          color: fallback.color || 'text-brand-cyan',
+          bgColor: fallback.bgColor || 'bg-brand-cyan/10',
+        };
       })
-      .catch(() => {});
-    return () => {
-      active = false;
-    };
-  }, []);
+    : DEFAULT_CATEGORIES
+  ).slice(0, 4);
 
   const scrollerRef = useRef(null);
   const [atStart, setAtStart] = useState(true);

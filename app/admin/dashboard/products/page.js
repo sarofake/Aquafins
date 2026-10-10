@@ -7,16 +7,19 @@ import {
   CheckCircle, Search, Filter, Star, AlertCircle, Eye,
 } from 'lucide-react';
 import ProductForm from '@/components/admin/ProductForm';
-import ProductModal from '@/components/ProductModal';
 import { formatPrice } from '@/lib/currency';
+import { productHref } from '@/lib/slugify';
 import { getMissingProductFields, isProductDraft } from '@/lib/productValidation';
+import { fetchWithCache } from '@/lib/fetchCache';
+import { invalidateAdminAndCatalog } from '@/lib/clientCache';
+
+const ADMIN_TTL_MS = 5 * 60 * 1000;
 
 export default function ProductsPage() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
-  const [previewProduct, setPreviewProduct] = useState(null);
   const [search, setSearch] = useState('');
   const [motherFilter, setMotherFilter] = useState('all');
   const [subFilter, setSubFilter] = useState('all');
@@ -46,12 +49,13 @@ export default function ProductsPage() {
     return cat.name;
   };
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (force = false) => {
     setLoading(true);
     try {
-      const [pRes, cRes] = await Promise.all([fetch('/api/admin/products'), fetch('/api/admin/categories')]);
-      const pData = await pRes.json();
-      const cData = await cRes.json();
+      const [pData, cData] = await Promise.all([
+        fetchWithCache('/api/admin/products', 'admin_products', ADMIN_TTL_MS, { force }),
+        fetchWithCache('/api/admin/categories', 'admin_categories', ADMIN_TTL_MS, { force }),
+      ]);
       setProducts(pData.products || []);
       setCategories(cData.categories || []);
     } catch (e) { setErrorMsg(e.message); } finally { setLoading(false); }
@@ -59,20 +63,16 @@ export default function ProductsPage() {
 
   useEffect(() => { loadData(); }, [loadData]);
   useEffect(() => {
-    if (!previewProduct) return;
-    const el = document.documentElement;
-    const hadLight = el.classList.contains('light');
-    el.classList.remove('light');
-    return () => { if (hadLight) el.classList.add('light'); };
-  }, [previewProduct]);
-  useEffect(() => {
     if (successMsg || errorMsg) { const t = setTimeout(() => { setSuccessMsg(''); setErrorMsg(''); }, 4000); return () => clearTimeout(t); }
   }, [successMsg, errorMsg]);
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this product?')) return; setSaving(true); try {
       const res = await fetch(`/api/admin/products/${id}`, { method: 'DELETE' }); const data = await res.json();
-      if (!res.ok) throw new Error(data.error); setSuccessMsg('Product deleted'); loadData();
+      if (!res.ok) throw new Error(data.error);
+      setSuccessMsg('Product deleted');
+      invalidateAdminAndCatalog();
+      loadData();
     } catch (err) { setErrorMsg(err.message); } finally { setSaving(false); }
   };
 
@@ -150,13 +150,14 @@ export default function ProductsPage() {
       </div>
       {loading ? (<div className="py-16 text-center text-cyan-600"><Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" /><p className="text-xs text-slate-500">Loading products...</p></div>)
       : filtered.length === 0 ? (<div className="bg-white border border-slate-200 rounded-2xl p-12 text-center shadow-sm"><Package className="w-12 h-12 text-slate-300 mx-auto mb-3" /><h3 className="text-base font-bold text-slate-900 mb-1">No products found</h3><p className="text-xs text-slate-500 mb-4">Click &quot;Upload Product&quot; to add your first item.</p><button onClick={() => setFormOpen(true)} className="bg-cyan-600 text-white px-4 py-2 rounded-full text-xs font-bold hover:bg-cyan-700 inline-flex items-center gap-2 cursor-pointer"><Plus className="w-4 h-4" /> Upload Product Now</button></div>)
-      : (<div className="space-y-3 max-w-full">{filtered.map((p) => {
+      : (<div className="space-y-3 max-w-full">{filtered.map((p, index) => {
         const href = `/admin/dashboard/products/${p.id}`;
         const missingFields = getMissingProductFields(p);
         const isDraft = missingFields.length > 0;
         const discount = p.original_price && p.original_price > p.price ? Math.round(((p.original_price - p.price) / p.original_price) * 100) : null;
         return (<div key={p.id} className={`bg-white border ${isDraft ? 'border-amber-300/80 bg-amber-50/20 hover:border-amber-400' : 'border-slate-200 hover:border-cyan-600/50'} rounded-xl p-3 flex flex-col sm:flex-row sm:items-center gap-3 transition-all shadow-sm hover:shadow-md group min-w-0`}>
           <div className="flex items-center gap-3 flex-1 min-w-0">
+            <span className="w-8 h-8 shrink-0 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-[11px] font-bold text-slate-500" title="Serial No">{index + 1}</span>
             <Link href={href} className="relative w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 cursor-pointer">
               <img src={p.image || 'https://placehold.co/400x300?text=No+Image'} alt={p.name} className="w-full h-full object-cover" />
               {p.featured && <span className="absolute top-1 left-1 bg-amber-400 text-slate-900 text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-sm"><Star className="w-2.5 h-2.5 fill-slate-900" /></span>}
@@ -199,21 +200,13 @@ export default function ProductsPage() {
               {p.original_price && <span className="text-[10px] text-slate-400 line-through">{formatPrice(p.original_price)}</span>}
             </div>
             <div className="flex items-center gap-1">
-              <button onClick={() => setPreviewProduct(p)} className="p-1.5 text-slate-500 hover:text-cyan-600 hover:bg-cyan-50 border border-slate-200 rounded-lg transition-colors cursor-pointer" title="Show as client"><Eye className="w-4 h-4" /></button>
+              <button onClick={() => window.open(productHref(p), '_blank', 'noopener')} className="p-1.5 text-slate-500 hover:text-cyan-600 hover:bg-cyan-50 border border-slate-200 rounded-lg transition-colors cursor-pointer" title="Show as client"><Eye className="w-4 h-4" /></button>
               <Link href={href} className="p-1.5 text-cyan-600 hover:bg-cyan-50 rounded-lg transition-colors" title="Edit"><Pencil className="w-4 h-4" /></Link>
               <button onClick={() => handleDelete(p.id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer" title="Delete"><Trash2 className="w-4 h-4" /></button>
             </div>
           </div>
         </div>);
       })}</div>)}
-      {previewProduct && (
-        <div className="fixed inset-0 z-[60]">
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[70] bg-slate-900/90 text-white text-[11px] font-bold px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg pointer-events-none">
-            <Eye className="w-3.5 h-3.5" /> Client view preview
-          </div>
-          <ProductModal product={previewProduct} onClose={() => setPreviewProduct(null)} />
-        </div>
-      )}
       {formOpen && (<div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/50 backdrop-blur-md">
         <div className="w-full max-w-5xl bg-white rounded-3xl relative max-h-[92vh] overflow-hidden shadow-2xl text-slate-900 flex flex-col">
 
@@ -230,7 +223,7 @@ export default function ProductsPage() {
           <div className="overflow-y-auto flex-1 p-6">
             <ProductForm
               categories={categories}
-              onSaved={() => { setFormOpen(false); setSuccessMsg('Product created!'); loadData(); }}
+              onSaved={() => { setFormOpen(false); setSuccessMsg('Product created!'); invalidateAdminAndCatalog(); loadData(); }}
               onCancel={() => setFormOpen(false)}
             />
           </div>
