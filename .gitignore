@@ -22,6 +22,3 @@ SUPABASE_CLOUDINARY_SETUP.md
 
 # Supabase CLI temp/cache
 supabase/.temp/
-
-# Netlify build output / local state (generated, never commit)
-.netlify/

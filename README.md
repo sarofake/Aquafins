@@ -8,7 +8,7 @@ environment variables and the admin panel — no code edits required to rebrand.
 - **Framework:** Next.js 15 (App Router), React 19, Tailwind CSS
 - **Database:** Supabase (Postgres + REST) — tables are created automatically
 - **Images:** Cloudinary (admin uploads)
-- **Hosting:** Vercel or Netlify
+- **Hosting:** Vercel — one project per deployment
 
 ---
 
@@ -28,8 +28,10 @@ environment variables and the admin panel — no code edits required to rebrand.
 ## 2. Configure environment
 
 Copy `.env.example` to `.env.local` and fill in the values, or paste the same
-variables into the hosting dashboard (Vercel → *Settings → Environment
-Variables*, Netlify → *Site configuration → Environment variables*).
+variables into the Vercel dashboard (*Project → Settings → Environment
+Variables*). Add them for **Production**, **Preview** and **Development**; the
+build runs the database migration, so the Supabase values must be present at
+build time.
 
 | Variable | Required | Purpose |
 | --- | --- | --- |
@@ -47,25 +49,30 @@ Variables*, Netlify → *Site configuration → Environment variables*).
 
 ## 3. Deploy
 
-**Vercel**
+Vercel is the supported host. Each customer deployment is its own Vercel
+project, connected to its own fork/copy of this repository and its own Supabase
+and Cloudinary accounts.
+
+**Option A — dashboard**
+
+1. *Add New → Project* and import the repository.
+2. Framework preset: **Next.js** (detected automatically).
+3. Paste the environment variables from section 2.
+4. Deploy, then add the customer's custom domain under *Settings → Domains*.
+
+**Option B — CLI**
 
 ```bash
+vercel link      # once, links this folder to the Vercel project
 vercel --prod
 ```
 
-`vercel.json` already sets the framework and build commands.
+`vercel.json` pins the framework and the build command (`npm run build`). Keep
+that build command: plain `next build` would skip the `prebuild` hook and the
+database migration with it.
 
-**Netlify**
-
-```bash
-netlify deploy --prod
-```
-
-`netlify.toml` configures `npm run build`, the Next.js runtime plugin and the
-secret-scan exclusions (see *Notes* below).
-
-Both platforms run the database migration automatically before the build
-finishes — see the next section.
+Every platform build runs the database migration before the build finishes —
+see the next section. Pushing to the linked branch redeploys automatically.
 
 ## 4. Database setup is automatic
 
@@ -117,10 +124,9 @@ Long-form copy is template content and is edited in the repository:
 
 ## 6. Notes
 
-- **Netlify secret scanning:** `netlify.toml` omits three harmless keys
-  (`AQUAFINS_ADMIN_ID`, `SUPABASE_DB_NAME`, `SUPABASE_DB_PORT`). Real secrets
-  stay scanned. If Netlify still blocks a deploy, add the same list under
-  *Site configuration → Build & deploy → Environment*.
+- **Redeploy after changing environment variables.** Vercel only injects new
+  values into a fresh build; after adding a Supabase/Cloudinary variable, use
+  *Deployments → ⋯ → Redeploy*.
 - **Data caching:** public API responses are cached in-memory, at the CDN and in
   the browser. Branding edits reach visitors within about a minute.
 - **Admin routes** are protected by middleware; `/api/health` is public.
