@@ -76,10 +76,10 @@ const translations = {
     orderProduct: 'Order Product',
     sendOrderRequest: 'Send Order Request',
     chooseWhereToSend: 'Choose where you want to send your order:',
-    sendInWhatsapp: 'Send in WhatsApp (01787-283804)',
+    sendInWhatsapp: 'Send in WhatsApp',
     sendInMessenger: 'Send in Messenger',
     visitFacebookPage: 'Visit Facebook Page',
-    callHotline: 'Call Hotline: 01787-283804',
+    callHotline: 'Call Hotline',
 
     // Footer
     brandFooterDesc: 'Your trusted partner for high-grade aquascaping products, exotic fish, healthy aquatic flora, and professional equipment nationwide.',
@@ -150,6 +150,13 @@ const translations = {
     locationTitle: 'Location & Delivery',
     locationDesc: 'Dhaka, Bangladesh (Express nationwide delivery)',
     sendOnWhatsappOption: 'Send via WhatsApp',
+    deliveryInfoTitle: 'Delivery Information',
+    returnPolicyTitle: 'Return Policy',
+    minimumOrder: 'Minimum order',
+    findUs: 'Find Us',
+    supportLabel: 'Support',
+    alternatePhoneLabel: 'Alternate',
+    emailLabel: 'Email',
   },
   bn: {
     // Header
@@ -224,10 +231,10 @@ const translations = {
     orderProduct: 'পণ্য অর্ডার',
     sendOrderRequest: 'অর্ডার মেসেজ পাঠান',
     chooseWhereToSend: 'আপনার সুবিধাজনক প্ল্যাটফর্মে অর্ডার করুন:',
-    sendInWhatsapp: 'হোয়াটসঅ্যাপে পাঠান (01787-283804)',
+    sendInWhatsapp: 'হোয়াটসঅ্যাপে পাঠান',
     sendInMessenger: 'মেসেঞ্জারে পাঠান',
     visitFacebookPage: 'ফেসবুক পেজ ভিজিট করুন',
-    callHotline: 'হটলাইনে কল করুন: 01787-283804',
+    callHotline: 'হটলাইনে কল করুন',
 
     // Footer
     brandFooterDesc: 'উন্নত মানের একুয়াস্কেপিং পণ্য, এক্সোটিক মাছ, জলজ উদ্ভিদ ও সেরা অ্যাকোয়ারিয়াম সরঞ্জামের নির্ভরযোগ্য বিশ্বস্ত প্রতিষ্ঠান।',
@@ -298,6 +305,13 @@ const translations = {
     locationTitle: 'ঠিকানা ও ডেলিভারি',
     locationDesc: 'ঢাকা, বাংলাদেশ (সারাদেশে দ্রুত ডেলিভারি)',
     sendOnWhatsappOption: 'হোয়াটসঅ্যাপে পাঠান',
+    deliveryInfoTitle: 'ডেলিভারি তথ্য',
+    returnPolicyTitle: 'রিটার্ন পলিসি',
+    minimumOrder: 'সর্বনিম্ন অর্ডার',
+    findUs: 'আমাদের ঠিকানা',
+    supportLabel: 'সাপোর্ট',
+    alternatePhoneLabel: 'বিকল্প ফোন',
+    emailLabel: 'ইমেইল',
   },
 };
 

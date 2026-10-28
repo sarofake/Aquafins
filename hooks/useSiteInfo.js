@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { getClientCachedItem, setClientCachedItem } from '@/lib/clientCache';
 import { useSiteInfoSeed } from '@/components/SiteInfoProvider';
+import { formatPrice, CURRENCY_SYMBOL, DEFAULT_CURRENCY } from '@/lib/currency';
 
 const SITE_INFO_CACHE_KEY = 'site_info_public';
 // Kept short so branding edits in Admin → Site Info show up quickly.
@@ -137,22 +138,9 @@ export function splitBrandName(name, tagline = '') {
   return { primary: parts.join(' '), secondary };
 }
 
-// Defaults match the shipped theme so an unconfigured deployment still looks
-// complete. Everything here is overridable in Admin → Site Info.
-const FALLBACK_SOCIALS = {
-  facebook: 'https://www.facebook.com/aquafinsbangladesh/',
-  youtube: 'https://www.youtube.com/@aquafinsbd',
-  instagram: 'https://www.instagram.com/aquafinsbd',
-  threads: 'https://www.threads.com/@aquafinsbd',
-  tiktok: 'https://www.tiktok.com/@aquafinsbd',
-};
-
-const FALLBACK_CONTACT = {
-  phone: '01787-283804',
-  email: 'support@aquafins.bd',
-  whatsapp: '01787-283804',
-};
-
+// No template-brand fallbacks here on purpose: this project is deployed as a
+// separate site per business, so an unset phone/social must render nothing
+// instead of another brand's contact details.
 function digitsOnly(value) {
   return String(value || '').replace(/[^\d+]/g, '');
 }
@@ -206,11 +194,11 @@ function toWebsiteHref(value) {
   return /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
 }
 
-/** Social profile URLs, falling back to the theme defaults when unset. */
+/** Social profile URLs, straight from Admin → Site Info. Unset = hidden. */
 export function useSocialLinks(initialInfo = null) {
   const { info, loading } = useSiteInfo(initialInfo);
 
-  const pick = (key) => (info[key] || '').trim() || FALLBACK_SOCIALS[key];
+  const pick = (key) => (info[key] || '').trim();
   const facebook = pick('facebook');
 
   return {
@@ -220,43 +208,68 @@ export function useSocialLinks(initialInfo = null) {
     instagram: pick('instagram'),
     threads: pick('threads'),
     tiktok: pick('tiktok'),
-    twitter: (info.twitter || '').trim(),
+    twitter: pick('twitter'),
+    website: toWebsiteHref(info.website),
     messenger: messengerFromFacebook(facebook),
-    // Placeholder/partial numbers (e.g. "+880 1XXX-XXXXXX") would produce a
-    // dead wa.me link, so fall back to the shipped default instead.
-    whatsapp:
-      toWhatsAppHref(info.whatsapp) ||
-      toWhatsAppHref(isUsablePhone(info.phone_primary) ? info.phone_primary : '') ||
-      toWhatsAppHref(FALLBACK_CONTACT.whatsapp),
+    // Numbers written as placeholders ("+880 1XXX-XXXXXX") produce no link, so
+    // the icon disappears instead of opening a dead wa.me page.
+    whatsapp: toWhatsAppHref(info.whatsapp) || toWhatsAppHref(info.phone_primary),
   };
 }
 
-/** Phone / email / address shown in the header and footer. */
+/** Phone / email / address / hours shown in the header, footer and contact page. */
 export function useContactInfo(initialInfo = null) {
   const { info, loading } = useSiteInfo(initialInfo);
 
-  const phone = isUsablePhone(info.phone_primary)
-    ? info.phone_primary.trim()
-    : FALLBACK_CONTACT.phone;
-  const email = isUsableEmail(info.email) ? info.email.trim() : FALLBACK_CONTACT.email;
-  const whatsapp = isUsablePhone(info.whatsapp)
-    ? info.whatsapp.trim()
-    : phone;
+  const phone = isUsablePhone(info.phone_primary) ? info.phone_primary.trim() : '';
+  const email = isUsableEmail(info.email) ? info.email.trim() : '';
+  const whatsapp = isUsablePhone(info.whatsapp) ? info.whatsapp.trim() : phone;
+  const address = (info.address || '').trim();
+  const addressBn = (info.address_bn || '').trim();
+  const city = (info.city || '').trim();
+  const country = (info.country || '').trim();
 
   return {
     loading,
     phone,
     phoneAlt: isUsablePhone(info.phone_secondary) ? info.phone_secondary.trim() : '',
-    phoneHref: `tel:${digitsOnly(phone).replace(/^\+/, '')}`,
+    phoneHref: phone ? `tel:${digitsOnly(phone).replace(/^\+/, '')}` : '',
     email,
     emailSupport: isUsableEmail(info.email_support) ? info.email_support.trim() : '',
     website: (info.website || '').trim(),
     websiteHref: toWebsiteHref(info.website),
-    address: (info.address || '').trim(),
-    addressBn: (info.address_bn || '').trim(),
-    city: (info.city || '').trim(),
-    country: (info.country || '').trim(),
+    address,
+    addressBn,
+    city,
+    country,
+    // "12 Road 5, Dhaka, Bangladesh" — skips whatever is not filled in.
+    fullAddress: [...new Set([address, city, country].filter(Boolean))].join(', '),
+    fullAddressBn: [...new Set([addressBn, city, country].filter(Boolean))].join(', '),
+    businessHours: (info.business_hours || '').trim(),
+    businessHoursBn: (info.business_hours_bn || '').trim(),
+    mapEmbedUrl: (info.map_embed_url || '').trim(),
+    minOrderAmount: Number(info.min_order_amount) > 0 ? Number(info.min_order_amount) : 0,
     whatsappHref: toWhatsAppHref(whatsapp),
     whatsappNumber: whatsapp,
   };
 }
+
+/**
+ * Prices use the currency chosen in Admin → Site Info → Currency & Colors.
+ * `format()` is what components should call instead of importing formatPrice.
+ */
+export function useCurrency(initialInfo = null) {
+  const { info, loading } = useSiteInfo(initialInfo);
+  const code = (info.currency_code || '').trim() || DEFAULT_CURRENCY;
+  // Operators sometimes fill the code but leave the symbol blank; showing
+  // "BDT 1,234" beats falling back to the template's unrelated symbol.
+  const symbol = (info.currency || '').trim() || code || CURRENCY_SYMBOL;
+
+  return {
+    loading,
+    symbol,
+    code,
+    format: (amount) => formatPrice(amount, symbol),
+  };
+}
+

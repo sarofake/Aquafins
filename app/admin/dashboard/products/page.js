@@ -7,7 +7,7 @@ import {
   CheckCircle, Search, Filter, Star, AlertCircle, Eye,
 } from 'lucide-react';
 import ProductForm from '@/components/admin/ProductForm';
-import { formatPrice } from '@/lib/currency';
+import { useCurrency } from '@/hooks/useSiteInfo';
 import { productHref } from '@/lib/slugify';
 import { getMissingProductFields, isProductDraft } from '@/lib/productValidation';
 import { fetchWithCache } from '@/lib/fetchCache';
@@ -16,6 +16,7 @@ import { invalidateAdminAndCatalog } from '@/lib/clientCache';
 const ADMIN_TTL_MS = 5 * 60 * 1000;
 
 export default function ProductsPage() {
+  const { format: formatPrice } = useCurrency();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);

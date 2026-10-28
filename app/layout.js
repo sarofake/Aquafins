@@ -34,9 +34,39 @@ export async function generateMetadata() {
   };
 }
 
-export default function RootLayout({ children }) {
+// Accepts #rgb / #rgba / #rrggbb / #rrggbbaa so a stored value can be injected
+// into a CSS variable without any chance of breaking out of the declaration.
+const COLOR_PATTERN = /^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
+
+function themeVariables(info) {
+  const primary = String(info?.primary_color || '').trim();
+  const secondary = String(info?.secondary_color || '').trim();
+  const style = {};
+
+  // These are the same variables the theme uses, so Tailwind's bg-brand-cyan /
+  // text-brand-cyan etc. pick the operator's colour up everywhere.
+  if (COLOR_PATTERN.test(primary)) style['--brand-cyan'] = primary;
+  if (COLOR_PATTERN.test(secondary)) {
+    style['--brand-blue'] = secondary;
+    style['--brand-accent'] = secondary;
+  }
+
+  return style;
+}
+
+export default async function RootLayout({ children }) {
+  // Currency, colours and branding are per-deployment settings (Admin → Site
+  // Info). Rendering the colours into the <html> style means no flash and no
+  // extra client request.
+  const info = await getSiteInfo();
+
   return (
-    <html lang="en" className="scroll-smooth" suppressHydrationWarning>
+    <html
+      lang="en"
+      className="scroll-smooth"
+      style={themeVariables(info)}
+      suppressHydrationWarning
+    >
       <head>
         {/* Apply saved theme before paint to prevent flash (default: light / white) */}
         <script

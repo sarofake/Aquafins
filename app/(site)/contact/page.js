@@ -1,6 +1,6 @@
 'use client';
 
-import { Phone, MessageCircle, Globe, MapPin, Clock } from 'lucide-react';
+import { Phone, MessageCircle, Globe, MapPin, Clock, Mail } from 'lucide-react';
 import ContactSection from '@/components/ContactSection';
 import FormattedText from '@/components/FormattedText';
 import contact from '@/lib/content/contact';
@@ -17,7 +17,7 @@ function FacebookIcon({ className }) {
 }
 
 export default function ContactPage() {
-  const { lang } = useLanguage();
+  const { lang, t } = useLanguage();
   const brand = useBrand();
   const contactInfo = useContactInfo();
   const socials = useSocialLinks();
@@ -25,31 +25,60 @@ export default function ContactPage() {
 
   const bx = (text) => brandify(text, brand.name);
 
+  const addressLine = lang === 'bn' ? contactInfo.fullAddressBn : contactInfo.fullAddress;
+
+  // Admin → Site Info → Business Hours. Nothing is shown when it is not set.
+  const hoursLine = lang === 'bn'
+    ? contactInfo.businessHoursBn || contactInfo.businessHours
+    : contactInfo.businessHours;
+
+  // Only http(s) URLs are embedded; "" or a pasted "javascript:" value is ignored.
+  const mapSrc = /^https?:\/\//i.test(contactInfo.mapEmbedUrl) ? contactInfo.mapEmbedUrl : '';
+
   const channels = [
-    { icon: Phone, label: page.phoneLabel, value: contactInfo.phone, href: contactInfo.phoneHref },
-    {
+    contactInfo.phone && {
+      icon: Phone,
+      label: page.phoneLabel,
+      value: contactInfo.phone,
+      href: contactInfo.phoneHref,
+    },
+    contactInfo.phoneAlt && {
+      icon: Phone,
+      label: t('alternatePhoneLabel'),
+      value: contactInfo.phoneAlt,
+      href: `tel:${contactInfo.phoneAlt.replace(/[^\d+]/g, '').replace(/^\+/, '')}`,
+    },
+    socials.whatsapp && {
       icon: MessageCircle,
       label: page.whatsappLabel,
       value: contactInfo.whatsappNumber,
       href: socials.whatsapp,
     },
-    {
+    contactInfo.emailSupport && {
+      icon: Mail,
+      label: t('supportLabel'),
+      value: contactInfo.emailSupport,
+      href: `mailto:${contactInfo.emailSupport}`,
+    },
+    contactInfo.email && {
+      icon: Mail,
+      label: t('emailLabel'),
+      value: contactInfo.email,
+      href: `mailto:${contactInfo.email}`,
+    },
+    socials.facebook && {
       icon: FacebookIcon,
       label: page.facebookLabel,
       value: brand.name,
-      href: socials.facebook || page.facebookHref,
+      href: socials.facebook,
     },
-    ...(contactInfo.website
-      ? [
-          {
-            icon: Globe,
-            label: page.websiteLabel,
-            value: contactInfo.website.replace(/^https?:\/\//i, ''),
-            href: contactInfo.websiteHref,
-          },
-        ]
-      : []),
-  ];
+    contactInfo.website && {
+      icon: Globe,
+      label: page.websiteLabel,
+      value: contactInfo.website.replace(/^https?:\/\//i, ''),
+      href: contactInfo.websiteHref,
+    },
+  ].filter(Boolean);
 
   return (
     <div>
@@ -79,58 +108,83 @@ export default function ContactPage() {
       <section className="max-w-7xl mx-auto px-4 lg:px-12 py-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Channels */}
-          <div className="bg-brand-card border border-brand-border rounded-2xl p-6">
-            <h3 className="font-bold text-main mb-4">{page.channelsTitle}</h3>
-            <ul className="space-y-3">
-              {channels.map((channel) => {
-                const IconComponent = channel.icon;
-                return (
-                  <li key={channel.label}>
-                    <a
-                      href={channel.href}
-                      target={channel.href.startsWith('http') ? '_blank' : undefined}
-                      rel={channel.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                      className="flex items-center gap-3 text-sm text-muted hover:text-brand-cyan transition-colors"
-                    >
-                      <span className="w-8 h-8 rounded-lg bg-brand-cyan/10 border border-brand-cyan/30 flex items-center justify-center text-brand-cyan flex-shrink-0">
-                        <IconComponent className="w-4 h-4" />
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block text-xs text-subtle">{channel.label}</span>
-                        <span className="block font-semibold text-main">{channel.value}</span>
-                      </span>
-                    </a>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
+          {channels.length > 0 && (
+            <div className="bg-brand-card border border-brand-border rounded-2xl p-6">
+              <h3 className="font-bold text-main mb-4">{page.channelsTitle}</h3>
+              <ul className="space-y-3">
+                {channels.map((channel) => {
+                  const IconComponent = channel.icon;
+                  return (
+                    <li key={`${channel.label}-${channel.value}`}>
+                      <a
+                        href={channel.href}
+                        target={channel.href.startsWith('http') ? '_blank' : undefined}
+                        rel={channel.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                        className="flex items-center gap-3 text-sm text-muted hover:text-brand-cyan transition-colors"
+                      >
+                        <span className="w-8 h-8 rounded-lg bg-brand-cyan/10 border border-brand-cyan/30 flex items-center justify-center text-brand-cyan flex-shrink-0">
+                          <IconComponent className="w-4 h-4" />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block text-xs text-subtle">{channel.label}</span>
+                          <span className="block font-semibold text-main">{channel.value}</span>
+                        </span>
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
 
-          {/* Address */}
-          <div className="bg-brand-card border border-brand-border rounded-2xl p-6">
-            <h3 className="font-bold text-main mb-4">{page.addressTitle}</h3>
-            <div className="flex items-start gap-3">
-              <span className="w-8 h-8 rounded-lg bg-brand-cyan/10 border border-brand-cyan/30 flex items-center justify-center text-brand-cyan flex-shrink-0">
-                <MapPin className="w-4 h-4" />
-              </span>
-              <div className="text-sm text-muted leading-relaxed">
-                <p className="font-semibold text-main">{brand.name}</p>
-                <p>{contactInfo.address || page.addressCountry}</p>
+          {/* Address (Admin → Site Info → Address & Location) */}
+          {addressLine && (
+            <div className="bg-brand-card border border-brand-border rounded-2xl p-6">
+              <h3 className="font-bold text-main mb-4">{page.addressTitle}</h3>
+              <div className="flex items-start gap-3">
+                <span className="w-8 h-8 rounded-lg bg-brand-cyan/10 border border-brand-cyan/30 flex items-center justify-center text-brand-cyan flex-shrink-0">
+                  <MapPin className="w-4 h-4" />
+                </span>
+                <div className="text-sm text-muted leading-relaxed">
+                  <p className="font-semibold text-main">{brand.name}</p>
+                  <p>{addressLine}</p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Hours */}
-          <div className="bg-brand-card border border-brand-border rounded-2xl p-6">
-            <h3 className="font-bold text-main mb-4">{page.hoursTitle}</h3>
-            <div className="flex items-start gap-3">
-              <span className="w-8 h-8 rounded-lg bg-brand-cyan/10 border border-brand-cyan/30 flex items-center justify-center text-brand-cyan flex-shrink-0">
-                <Clock className="w-4 h-4" />
-              </span>
-              <p className="text-sm text-muted leading-relaxed">{page.hoursValue}</p>
+          {/* Hours (Admin → Site Info → Business Hours) */}
+          {hoursLine && (
+            <div className="bg-brand-card border border-brand-border rounded-2xl p-6">
+              <h3 className="font-bold text-main mb-4">{page.hoursTitle}</h3>
+              <div className="flex items-start gap-3">
+                <span className="w-8 h-8 rounded-lg bg-brand-cyan/10 border border-brand-cyan/30 flex items-center justify-center text-brand-cyan flex-shrink-0">
+                  <Clock className="w-4 h-4" />
+                </span>
+                <p className="text-sm text-muted leading-relaxed">{hoursLine}</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Google Maps embed from Admin → Site Info → Address & Location */}
+        {mapSrc && (
+          <div className="mt-8">
+            <h3 className="font-bold text-main mb-3">{t('findUs')}</h3>
+            <div className="rounded-2xl overflow-hidden border border-brand-border bg-brand-card">
+              <iframe
+                src={mapSrc}
+                title={`${brand.name} location`}
+                width="100%"
+                height="360"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                style={{ border: 0 }}
+                allowFullScreen
+              />
             </div>
           </div>
-        </div>
+        )}
 
         <p className="text-brand-cyan font-display text-xl md:text-2xl tracking-wide mt-10">
           {bx(page.tagline)}

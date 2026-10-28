@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { ShoppingBag, Tag } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
-import { formatPrice } from '@/lib/currency';
+import { useCurrency } from '@/hooks/useSiteInfo';
 import { productHref } from '@/lib/slugify';
 import FormattedText from '@/components/FormattedText';
 
@@ -15,6 +15,7 @@ export default function ProductCard({
   accentColor = 'cyan',
 }) {
   const { lang, t } = useLanguage();
+  const { format: formatPrice } = useCurrency();
 
   if (!product) return null;
 

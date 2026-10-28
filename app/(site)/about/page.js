@@ -13,14 +13,28 @@ import {
   Compass,
 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
-import { useBrand, useContactInfo } from '@/hooks/useSiteInfo';
+import { useBrand, useContactInfo, useSiteInfo } from '@/hooks/useSiteInfo';
 import { brandify } from '@/lib/brandText';
 
 export default function AboutPage() {
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const brand = useBrand();
   const contact = useContactInfo();
+  const { info } = useSiteInfo();
   const bx = (text) => brandify(text, brand.name);
+
+  // Admin → Site Info → About Us overrides the template copy when filled in.
+  const aboutText = (lang === 'bn' ? info.about_us_bn || info.about_us : info.about_us) || '';
+  const introParagraphs = aboutText
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (introParagraphs.length === 0) {
+    introParagraphs.push(t('aboutIntro1'), t('aboutIntro2'));
+  }
+
+  const addressLine = lang === 'bn' ? contact.fullAddressBn : contact.fullAddress;
 
   const highlights = [
     {
@@ -101,12 +115,11 @@ export default function AboutPage() {
             <h2 className="text-3xl font-display font-bold text-main">
               {bx(t('aboutBrandTitle'))}
             </h2>
-            <p className="text-muted text-sm leading-relaxed">
-              {bx(t('aboutIntro1'))}
-            </p>
-            <p className="text-muted text-sm leading-relaxed">
-              {bx(t('aboutIntro2'))}
-            </p>
+            {introParagraphs.map((paragraph, index) => (
+              <p key={`${paragraph.slice(0, 24)}-${index}`} className="text-muted text-sm leading-relaxed">
+                {bx(paragraph)}
+              </p>
+            ))}
             <div className="flex flex-wrap gap-4 pt-2">
               <Link
                 href="/products"
@@ -187,18 +200,24 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto px-4 lg:px-12 py-12">
           <h2 className="text-2xl font-display font-bold text-main mb-6">{t('getInTouch')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-muted">
-            <div className="flex items-start gap-3">
-              <MapPin className="w-5 h-5 text-brand-cyan flex-shrink-0 mt-0.5" />
-              <span>{contact.address || t('dhakaBangladesh')}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Phone className="w-5 h-5 text-brand-cyan flex-shrink-0" />
-              <a href={contact.phoneHref} className="hover:text-brand-cyan transition-colors">{contact.phone}</a>
-            </div>
-            <div className="flex items-center gap-3">
-              <Mail className="w-5 h-5 text-brand-cyan flex-shrink-0" />
-              <a href={`mailto:${contact.email}`} className="hover:text-brand-cyan transition-colors">{contact.email}</a>
-            </div>
+            {addressLine && (
+              <div className="flex items-start gap-3">
+                <MapPin className="w-5 h-5 text-brand-cyan flex-shrink-0 mt-0.5" />
+                <span>{addressLine}</span>
+              </div>
+            )}
+            {contact.phone && (
+              <div className="flex items-center gap-3">
+                <Phone className="w-5 h-5 text-brand-cyan flex-shrink-0" />
+                <a href={contact.phoneHref} className="hover:text-brand-cyan transition-colors">{contact.phone}</a>
+              </div>
+            )}
+            {contact.email && (
+              <div className="flex items-center gap-3">
+                <Mail className="w-5 h-5 text-brand-cyan flex-shrink-0" />
+                <a href={`mailto:${contact.email}`} className="hover:text-brand-cyan transition-colors">{contact.email}</a>
+              </div>
+            )}
           </div>
         </div>
       </section>

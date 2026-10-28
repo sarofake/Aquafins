@@ -8,7 +8,6 @@ import OrderModal from '@/components/OrderModal';
 import ProductModal from '@/components/ProductModal';
 import FormattedText from '@/components/FormattedText';
 import { useLanguage } from '@/context/LanguageContext';
-import { formatPrice } from '@/lib/currency';
 
 import ProductCard from '@/components/ProductCard';
 

@@ -14,8 +14,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useCategories } from '@/hooks/useCategories';
-import { useBrand } from '@/hooks/useSiteInfo';
-import { formatPrice } from '@/lib/currency';
+import { useBrand, useCurrency, useContactInfo } from '@/hooks/useSiteInfo';
 import { productHref } from '@/lib/slugify';
 import FormattedText from '@/components/FormattedText';
 import OrderModal from '@/components/OrderModal';
@@ -29,6 +28,8 @@ export default function ProductDetail({ product }) {
   const { lang, t } = useLanguage();
   const { categories } = useCategories();
   const brand = useBrand();
+  const contact = useContactInfo();
+  const { format: formatPrice } = useCurrency();
   const [activeIndex, setActiveIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [orderOpen, setOrderOpen] = useState(false);
@@ -350,6 +351,13 @@ export default function ProductDetail({ product }) {
               )}
             </div>
 
+            {/* Minimum order amount from Admin → Site Info → Delivery & Returns */}
+            {contact.minOrderAmount > 0 && (
+              <p className="text-xs text-subtle mb-2">
+                {t('minimumOrder')}: <span className="font-semibold text-main">{formatPrice(contact.minOrderAmount)}</span>
+              </p>
+            )}
+
             <div className="my-4 h-px bg-gradient-to-r from-brand-border via-brand-border/60 to-transparent" />
 
             {/* Description */}
@@ -377,13 +385,15 @@ export default function ProductDetail({ product }) {
               <ShoppingBag className="w-4 h-4 shrink-0" />
               <span>{t('orderNow')}</span>
             </button>
-            <a
-              href="tel:01787283804"
-              className="flex-1 bg-brand-card hover:bg-brand-border/60 text-main font-bold text-xs sm:text-sm py-2.5 sm:py-3 px-4 sm:px-5 rounded-full border border-brand-border hover:border-brand-cyan/50 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer whitespace-nowrap"
-            >
-              <Phone className="w-4 h-4 text-brand-cyan shrink-0" />
-              <span>01787-283804</span>
-            </a>
+            {contact.phone && (
+              <a
+                href={contact.phoneHref}
+                className="flex-1 bg-brand-card hover:bg-brand-border/60 text-main font-bold text-xs sm:text-sm py-2.5 sm:py-3 px-4 sm:px-5 rounded-full border border-brand-border hover:border-brand-cyan/50 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer whitespace-nowrap"
+              >
+                <Phone className="w-4 h-4 text-brand-cyan shrink-0" />
+                <span>{contact.phone}</span>
+              </a>
+            )}
             <button
               onClick={handleShare}
               className={`flex-1 sm:flex-initial px-4 sm:px-5 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer border shadow-sm hover:scale-[1.02] active:scale-[0.98] whitespace-nowrap ${
