@@ -9,21 +9,35 @@ import { getClientCachedItem, setClientCachedItem } from '@/lib/clientCache';
 const HERO_CACHE_KEY = 'hero_slides_public';
 const HERO_CACHE_TTL_MS = 10 * 60 * 1000;
 
-export default function Hero() {
+export default function Hero({ initialSlides = [] }) {
   const { lang, t } = useLanguage();
-  const [slides, setSlides] = useState(() => getClientCachedItem(HERO_CACHE_KEY, HERO_CACHE_TTL_MS) || []);
-  const [loading, setLoading] = useState(() => !getClientCachedItem(HERO_CACHE_KEY, HERO_CACHE_TTL_MS));
+  // Server-provided slides make the first client render identical to the HTML.
+  const [slides, setSlides] = useState(initialSlides);
+  const [loading, setLoading] = useState(initialSlides.length === 0);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   // Fetch dynamic hero slides from API (cached in cookie/localStorage)
   useEffect(() => {
     let active = true;
 
+    // Prefer the slides already rendered by the server, then fall back to the
+    // browser cache or a live fetch for client-side navigations.
+    if (initialSlides.length > 0) {
+      setClientCachedItem(HERO_CACHE_KEY, initialSlides);
+      setSlides(initialSlides);
+      setLoading(false);
+      return () => {
+        active = false;
+      };
+    }
+
     const cached = getClientCachedItem(HERO_CACHE_KEY, HERO_CACHE_TTL_MS);
     if (cached) {
       setSlides(cached);
       setLoading(false);
-      return;
+      return () => {
+        active = false;
+      };
     }
 
     fetch('/api/hero')
@@ -42,7 +56,7 @@ export default function Hero() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [initialSlides]);
 
   // Auto slide timer
   useEffect(() => {

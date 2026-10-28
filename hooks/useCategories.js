@@ -8,13 +8,10 @@ const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 export function useCategories() {
   const cacheKey = 'categories_all';
 
-  const [categories, setCategories] = useState(() => {
-    return getClientCachedItem(cacheKey, CACHE_TTL_MS) || [];
-  });
-  const [loading, setLoading] = useState(() => {
-    const cached = getClientCachedItem(cacheKey, CACHE_TTL_MS);
-    return !cached || cached.length === 0;
-  });
+  // Start empty so the server HTML and the first client render match; the
+  // browser cache is applied in the effect below, one frame later.
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;

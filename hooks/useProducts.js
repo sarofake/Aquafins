@@ -14,14 +14,10 @@ export function useProducts(options = {}) {
   const deals = typeof options === 'object' && options?.deals ? true : false;
   const cacheKey = `products_${category}_${deals}_${isAll ? 'all' : limit}`;
 
-  // Initialize with cached data if available (0ms render without flickering)
-  const [products, setProducts] = useState(() => {
-    return getClientCachedItem(cacheKey, CLIENT_CACHE_TTL_MS) || [];
-  });
-  const [loading, setLoading] = useState(() => {
-    const cached = getClientCachedItem(cacheKey, CLIENT_CACHE_TTL_MS);
-    return !cached || cached.length === 0;
-  });
+  // Start empty so the server HTML and the first client render match; the
+  // browser cache is applied in the effect below, one frame later.
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;

@@ -43,14 +43,10 @@ export function useSiteInfo(initialInfo = null) {
   const seeded =
     seedSource && Object.keys(seedSource).length > 0 ? seedSource : null;
 
-  const [info, setInfo] = useState(() => {
-    return seeded || getClientCachedItem(SITE_INFO_CACHE_KEY, SITE_INFO_CACHE_TTL_MS) || {};
-  });
-  const [loading, setLoading] = useState(() => {
-    if (seeded) return false;
-    const cached = getClientCachedItem(SITE_INFO_CACHE_KEY, SITE_INFO_CACHE_TTL_MS);
-    return !cached || Object.keys(cached).length === 0;
-  });
+  // Never read the browser cache during the first render: the server has no
+  // cache, so doing it here is exactly what causes hydration mismatches.
+  const [info, setInfo] = useState(() => seeded || {});
+  const [loading, setLoading] = useState(() => !seeded);
 
   useEffect(() => {
     let active = true;
