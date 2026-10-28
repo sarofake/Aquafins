@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAuth, requireSupabase } from '@/lib/adminHelpers';
 import { translateToBangla } from '@/lib/translator';
 import { invalidateCache } from '@/lib/cache';
@@ -83,6 +84,12 @@ export async function POST(req) {
     }
 
     invalidateCache('categories');
+
+    // The header, footer, home grid and catalog chips are rendered on the
+    // server, so a new category must purge those pages instead of waiting for
+    // the 60s ISR window.
+    revalidatePath('/', 'layout');
+
     return NextResponse.json({ category: data });
   } catch (e) {
     return NextResponse.json({ error: e.message }, { status: 500 });

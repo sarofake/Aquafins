@@ -8,7 +8,6 @@ import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useBrand, splitBrandName, useSocialLinks, useContactInfo } from '@/hooks/useSiteInfo';
 import { useCategories } from '@/hooks/useCategories';
-import { resolveCategoryIcon, categoryAccent } from '@/lib/categoryIcons';
 import {
   Search,
   Menu,
@@ -363,9 +362,7 @@ export default function Header({ siteInfo = null }) {
               <>
                 <span className="text-brand-border">|</span>
 
-                {motherCategories.map((cat, index) => {
-                  const Icon = resolveCategoryIcon(cat.icon);
-                  const accent = categoryAccent(index);
+                {motherCategories.map((cat) => {
                   const label = lang === 'bn' ? cat.name_bn || cat.name : cat.name;
 
                   return (
@@ -374,11 +371,11 @@ export default function Header({ siteInfo = null }) {
                       href={`/products?category=${cat.slug}`}
                       className={
                         activeCategory === cat.slug
-                          ? 'text-brand-cyan font-bold flex items-center gap-1.5 border-b-2 border-brand-cyan pb-0.5'
-                          : 'hover:text-brand-cyan transition-colors flex items-center gap-1.5 text-muted'
+                          ? 'text-brand-cyan font-bold flex items-center border-b-2 border-brand-cyan pb-0.5'
+                          : 'hover:text-brand-cyan transition-colors flex items-center text-muted'
                       }
                     >
-                      <Icon className={`w-3.5 h-3.5 ${accent.color}`} /> {label}
+                      {label}
                     </Link>
                   );
                 })}
@@ -456,9 +453,7 @@ export default function Header({ siteInfo = null }) {
             </Link>
             <hr className="border-brand-border/60" />
             <span className="text-[10px] text-subtle font-bold uppercase tracking-wider">{t('motherCategories')}</span>
-            {motherCategories.map((cat, index) => {
-              const Icon = resolveCategoryIcon(cat.icon);
-              const accent = categoryAccent(index);
+            {motherCategories.map((cat) => {
               const label = lang === 'bn' ? cat.name_bn || cat.name : cat.name;
 
               return (
@@ -466,9 +461,9 @@ export default function Header({ siteInfo = null }) {
                   key={cat.id}
                   href={`/products?category=${cat.slug}`}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="hover:text-brand-cyan flex items-center gap-2"
+                  className="hover:text-brand-cyan flex items-center"
                 >
-                  <Icon className={`w-4 h-4 ${accent.color}`} /> {label}
+                  {label}
                 </Link>
               );
             })}

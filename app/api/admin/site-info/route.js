@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAuth, requireSupabase } from '@/lib/adminHelpers';
 import { invalidateCache } from '@/lib/cache';
 
@@ -60,6 +61,12 @@ export async function POST(req) {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
     invalidateCache('site_info');
+
+    // Name, tagline, description and favicon are baked into every page's static
+    // HTML and <head>, so a saved edit must purge the rendered pages. Without
+    // this the operator keeps seeing the old tagline until ISR expires.
+    revalidatePath('/', 'layout');
+
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('Error in POST /api/admin/site-info:', err);

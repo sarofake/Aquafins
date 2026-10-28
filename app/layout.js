@@ -6,8 +6,9 @@ import { getSiteInfo, brandFromSiteInfo } from '@/lib/serverSiteInfo';
 
 // Branding lives in the database (Admin → Site Info) so every deployment of this
 // template shows its own name, logo and favicon. ISR keeps metadata fresh
-// without a redeploy after the operator edits those settings.
-export const revalidate = 300;
+// without a redeploy after the operator edits those settings; saves also purge
+// the cache immediately via revalidatePath().
+export const revalidate = 60;
 
 export async function generateMetadata() {
   const info = await getSiteInfo();

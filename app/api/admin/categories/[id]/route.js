@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAuth, requireSupabase } from '@/lib/adminHelpers';
 import { translateToBangla } from '@/lib/translator';
 import { invalidateCache } from '@/lib/cache';
@@ -57,6 +58,10 @@ export async function PUT(req, { params }) {
     }
 
     invalidateCache('categories');
+
+    // Purge the server-rendered menus/cards so a rename shows up immediately.
+    revalidatePath('/', 'layout');
+
     return NextResponse.json({ category: data });
   } catch (e) {
     return NextResponse.json({ error: e.message }, { status: 500 });
@@ -80,5 +85,9 @@ export async function DELETE(req, { params }) {
   }
 
   invalidateCache('categories');
+
+  // Purge the server-rendered menus/cards so a deletion shows up immediately.
+  revalidatePath('/', 'layout');
+
   return NextResponse.json({ ok: true });
 }
