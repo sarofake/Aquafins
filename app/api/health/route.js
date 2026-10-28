@@ -7,64 +7,92 @@ export const dynamic = 'force-dynamic';
 
 const STARTED_AT = Date.now();
 
-// Presence-only checks. Values are never returned.
-const TRACKED_ENV = [
-  'NEXT_PUBLIC_SUPABASE_URL',
-  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-  'SUPABASE_SERVICE_ROLE_KEY',
-  'AQUAFINS_ADMIN_ID',
-  'AQUAFINS_ADMIN_PASSWORD',
-  'AQUAFINS_SESSION_SECRET',
-];
+// Tables the app cannot run without.
+const REQUIRED_TABLES = ['categories', 'products', 'site_info', 'hero_slides', 'contact_messages'];
 
-async function checkDatabase() {
-  const client = supabaseAdmin || supabase;
-  if (!client) {
-    return { status: 'skipped', message: 'Supabase URL / key not configured' };
+const SITE_FIELDS = {
+  site_name: 'name',
+  site_tagline: 'tagline',
+  logo_url: 'logoUrl',
+  favicon_url: 'faviconUrl',
+};
+
+async function checkTables(client) {
+  const entries = await Promise.all(
+    REQUIRED_TABLES.map(async (table) => {
+      try {
+        const { error } = await client.from(table).select('*', { count: 'exact', head: true });
+        return [table, !error];
+      } catch {
+        return [table, false];
+      }
+    })
+  );
+  return Object.fromEntries(entries);
+}
+
+async function readSiteInfo(client) {
+  const { data, error } = await client.from('site_info').select('key, value');
+  if (error) return { error: error.message };
+
+  const values = Object.fromEntries((data || []).map((row) => [row.key, row.value]));
+  const site = {};
+  for (const [column, key] of Object.entries(SITE_FIELDS)) {
+    site[key] = values[column] || null;
   }
-
-  const startedAt = Date.now();
-  try {
-    const { error } = await client
-      .from('site_info')
-      .select('key', { count: 'exact', head: true });
-
-    if (error) {
-      return { status: 'error', message: error.message, latencyMs: Date.now() - startedAt };
-    }
-    return { status: 'ok', latencyMs: Date.now() - startedAt };
-  } catch (err) {
-    return {
-      status: 'error',
-      message: err?.message || 'Database check failed',
-      latencyMs: Date.now() - startedAt,
-    };
-  }
+  return site;
 }
 
 export async function GET() {
-  const database = await checkDatabase();
-  const healthy = database.status === 'ok';
+  const client = supabaseAdmin || supabase;
+
+  const database = { ok: false, latencyMs: null };
+  let tables = {};
+  let site = {};
+
+  if (!client) {
+    database.error = 'Supabase is not configured';
+  } else {
+    const startedAt = Date.now();
+    const siteResult = await readSiteInfo(client);
+    database.latencyMs = Date.now() - startedAt;
+
+    if (siteResult.error) {
+      database.error = siteResult.error;
+    } else {
+      database.ok = true;
+      site = siteResult;
+    }
+
+    tables = await checkTables(client);
+  }
+
+  const missingTables = REQUIRED_TABLES.filter((table) => !tables[table]);
+  const healthy = database.ok && missingTables.length === 0;
 
   return NextResponse.json(
     {
-      status: healthy ? 'ok' : 'degraded',
+      status: healthy ? 'ok' : 'error',
+      database,
+      tables: {
+        ok: missingTables.length === 0,
+        missing: missingTables,
+      },
+      site,
+      hint:
+        missingTables.length > 0
+          ? 'Tables are missing. Redeploy (prebuild runs migrations) or POST /api/admin/migrate while signed in. If it persists, verify SUPABASE_DB_SESSION_URL / SUPABASE_DB_PASSWORD are correct.'
+          : undefined,
       timestamp: new Date().toISOString(),
       uptimeSeconds: Math.round((Date.now() - STARTED_AT) / 1000),
       deploy: {
         commit: process.env.COMMIT_REF || null,
         branch: process.env.BRANCH || null,
-        context: process.env.CONTEXT || null,
-        node: process.version,
       },
-      checks: { database },
-      env: Object.fromEntries(TRACKED_ENV.map((key) => [key, Boolean(process.env[key])])),
     },
     {
       status: healthy ? 200 : 503,
-      headers: {
-        'Cache-Control': 'no-store, max-age=0',
-      },
+      headers: { 'Cache-Control': 'no-store, max-age=0' },
     }
   );
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/adminHelpers';
-import { runDbMigrations, getDbConnectionString } from '@/lib/dbMigrations';
+import { runDbMigrations, getDbConnectionString, DB_ENV_HINT } from '@/lib/dbMigrations.mjs';
 
 export async function GET(req) {
   const authCheck = requireAuth(req);
@@ -11,7 +11,7 @@ export async function GET(req) {
     configured: hasConnectionString,
     message: hasConnectionString
       ? 'Database connection string is configured.'
-      : 'No DB connection string or credentials configured.',
+      : `No DB connection string or credentials configured. ${DB_ENV_HINT}`,
   });
 }
 

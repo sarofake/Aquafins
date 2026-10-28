@@ -4,8 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node tools/db-migrate.mjs",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "db:migrate": "node tools/db-migrate.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",

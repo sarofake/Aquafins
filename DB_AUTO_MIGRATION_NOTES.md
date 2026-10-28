@@ -33,7 +33,7 @@ All pending SQL migrations were executed live directly on Supabase via MCP `exec
 
 ## 3. Self-Healing Architecture
 
-1. **Auto-Migration Engine (`lib/dbMigrations.js`)**
+1. **Auto-Migration Engine (`lib/dbMigrations.mjs`)**
    - Built an idempotent, transaction-safe migration runner using `pg`.
    - Reads `supabase/migration_*.sql` files sorted by filename.
    - Applies pending migrations inside transactions and updates `public.schema_migrations`.

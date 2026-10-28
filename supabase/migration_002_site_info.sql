@@ -57,8 +57,6 @@ insert into public.site_info (key, value) values
   ('return_policy_bn', 'অব্যবহৃত পণ্যের জন্য ৭ দিনের রিটার্ন পলিসি'),
   ('about_us',         'We are a team of passionate aquarists dedicated to bringing you the best aquatic life and supplies.'),
   ('about_us_bn',     'আমরা উত্সাহী একুয়ারিস্টদের একটি দল যারা আপনাকে সেরা একুয়াটিক লাইফ এবং সাপ্লাই আনতে প্রতিশ্রুতিবদ্ধ।')
-on conflict (key) do update set
-  value = excluded.value,
-  updated_at = now();
+on conflict (key) do nothing;
 
 commit;
