@@ -4,59 +4,17 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ShoppingCart, ChevronLeft, ChevronRight, Compass } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
-import { getClientCachedItem, setClientCachedItem } from '@/lib/clientCache';
-
-const HERO_CACHE_KEY = 'hero_slides_public';
-const HERO_CACHE_TTL_MS = 10 * 60 * 1000;
+import { useBrand } from '@/hooks/useSiteInfo';
+import { brandify } from '@/lib/brandText';
 
 export default function Hero({ initialSlides = [] }) {
   const { lang, t } = useLanguage();
-  // Server-provided slides make the first client render identical to the HTML.
-  const [slides, setSlides] = useState(initialSlides);
-  const [loading, setLoading] = useState(initialSlides.length === 0);
+  const brand = useBrand();
+  // Slides come from the server render, so the HTML and the first client render
+  // are always identical. No browser cache here: it would resurrect slides the
+  // admin has already deleted.
+  const slides = initialSlides;
   const [currentIndex, setCurrentIndex] = useState(0);
-
-  // Fetch dynamic hero slides from API (cached in cookie/localStorage)
-  useEffect(() => {
-    let active = true;
-
-    // Prefer the slides already rendered by the server, then fall back to the
-    // browser cache or a live fetch for client-side navigations.
-    if (initialSlides.length > 0) {
-      setClientCachedItem(HERO_CACHE_KEY, initialSlides);
-      setSlides(initialSlides);
-      setLoading(false);
-      return () => {
-        active = false;
-      };
-    }
-
-    const cached = getClientCachedItem(HERO_CACHE_KEY, HERO_CACHE_TTL_MS);
-    if (cached) {
-      setSlides(cached);
-      setLoading(false);
-      return () => {
-        active = false;
-      };
-    }
-
-    fetch('/api/hero')
-      .then((r) => r.json())
-      .then((data) => {
-        if (active) {
-          const list = data.slides || [];
-          setSlides(list);
-          setClientCachedItem(HERO_CACHE_KEY, list);
-          setLoading(false);
-        }
-      })
-      .catch(() => {
-        if (active) setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [initialSlides]);
 
   // Auto slide timer
   useEffect(() => {
@@ -90,16 +48,41 @@ export default function Hero({ initialSlides = [] }) {
       ? currentSlide.button_text_bn || currentSlide.button_text || (lang === 'bn' ? 'অর্ডার করুন' : 'Shop Catalog')
       : currentSlide.button_text || 'Shop Catalog';
 
-  if (loading) {
+  // A fresh deployment has no slides yet. Render a brand-driven default hero
+  // instead of a spinner followed by an empty band (and a layout shift).
+  if (slides.length === 0) {
     return (
-      <section className="relative w-full min-h-[65vh] lg:h-[70vh] border-b border-brand-border/50 overflow-hidden bg-brand-dark flex items-center justify-center">
-        <div className="w-12 h-12 rounded-full border-2 border-brand-cyan/30 border-t-brand-cyan animate-spin" />
+      <section
+        id="hero-section"
+        className="relative w-full min-h-[65vh] lg:h-[70vh] border-b border-brand-border/50 overflow-hidden bg-brand-dark"
+        style={{
+          backgroundImage:
+            'linear-gradient(135deg, var(--hero-overlay-start, rgba(3,9,20,0.95)), var(--hero-overlay-mid, rgba(10,25,47,0.85)))',
+        }}
+      >
+        <div className="relative max-w-7xl mx-auto h-full px-4 lg:px-12 py-16 flex flex-col justify-center z-10">
+          <div className="max-w-2xl">
+            <span className="text-brand-cyan font-bold tracking-widest uppercase text-xs mb-3 inline-block px-3 py-1 rounded-full bg-brand-cyan/10 border border-brand-cyan/30 backdrop-blur-sm">
+              {brandify(t('heroBadgeDefault'), brand.name)}
+            </span>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-display font-bold text-main mb-6 leading-tight">
+              {brand.name}
+            </h1>
+            <p className="text-muted mb-8 text-sm sm:text-base leading-relaxed max-w-xl">
+              {brand.tagline || t('heroSubtitleDefault')}
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <Link
+                href="/products"
+                className="bg-brand-cyan text-brand-dark px-8 py-3.5 rounded-full font-bold hover:bg-white transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-brand-cyan/20"
+              >
+                {t('exploreCategories')} <Compass className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+        </div>
       </section>
     );
-  }
-
-  if (slides.length === 0) {
-    return null;
   }
 
   return (
