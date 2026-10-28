@@ -119,11 +119,19 @@ export function useBrand(initialInfo = null) {
 }
 
 /**
- * Splits a brand name into the two-line header treatment, e.g.
- * "Aqua Fins Bangladesh" -> { primary: "Aqua Fins", secondary: "Bangladesh" }.
+ * Builds the two-line header/footer treatment: the site name on the main line
+ * and the tagline in the small accent line. When no usable tagline is set, the
+ * last word of the name is used instead (the template's original look).
  */
-export function splitBrandName(name) {
-  const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+export function splitBrandName(name, tagline = '') {
+  const fullName = String(name || '').trim();
+  const tag = String(tagline || '').trim();
+
+  if (tag && tag.length <= 30) {
+    return { primary: fullName, secondary: tag };
+  }
+
+  const parts = fullName.split(/\s+/).filter(Boolean);
 
   if (parts.length <= 1) {
     return { primary: parts[0] || '', secondary: '' };

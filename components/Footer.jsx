@@ -9,7 +9,7 @@ import { useBrand, splitBrandName, useSocialLinks, useContactInfo } from '@/hook
 export default function Footer({ siteInfo = null }) {
   const { t } = useLanguage();
   const brand = useBrand(siteInfo);
-  const brandName = splitBrandName(brand.name);
+  const brandName = splitBrandName(brand.name, brand.tagline);
   const socials = useSocialLinks(siteInfo);
   const contact = useContactInfo(siteInfo);
 
@@ -33,12 +33,12 @@ export default function Footer({ siteInfo = null }) {
                   className="w-full h-full object-contain rounded-full"
                 />
               </div>
-              <div className="flex flex-col">
-                <span className="font-display tracking-wider text-lg font-bold text-main leading-none">
+              <div className="flex flex-col min-w-0">
+                <span className="font-display tracking-wider text-lg font-bold text-main leading-none truncate max-w-[200px]">
                   {brandName.primary.toUpperCase()}
                 </span>
                 {brandName.secondary && (
-                  <span className="text-[9px] tracking-widest text-brand-cyan uppercase font-bold">
+                  <span className="text-[9px] tracking-widest text-brand-cyan uppercase font-bold truncate max-w-[200px]">
                     {brandName.secondary}
                   </span>
                 )}

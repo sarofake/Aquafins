@@ -33,7 +33,7 @@ export default function Header({ siteInfo = null }) {
   const { theme, toggleTheme } = useTheme();
   const { lang, toggleLang, t } = useLanguage();
   const brand = useBrand(siteInfo);
-  const brandName = splitBrandName(brand.name);
+  const brandName = splitBrandName(brand.name, brand.tagline);
   const socials = useSocialLinks(siteInfo);
   const contact = useContactInfo(siteInfo);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -248,12 +248,12 @@ export default function Header({ siteInfo = null }) {
                     priority
                   />
                 </div>
-                <div className="flex flex-col">
-                  <span className="font-display tracking-wider text-2xl font-bold text-main group-hover:text-brand-cyan transition-colors leading-none">
+                <div className="flex flex-col min-w-0">
+                  <span className="font-display tracking-wider text-lg sm:text-2xl font-bold text-main group-hover:text-brand-cyan transition-colors leading-none truncate max-w-[180px] sm:max-w-[340px]">
                     {brandName.primary.toUpperCase()}
                   </span>
                   {brandName.secondary && (
-                    <span className="text-[10px] tracking-widest text-brand-cyan uppercase font-bold">
+                    <span className="text-[9px] sm:text-[10px] tracking-widest text-brand-cyan uppercase font-bold truncate max-w-[180px] sm:max-w-[340px]">
                       {brandName.secondary}
                     </span>
                   )}
@@ -324,7 +324,7 @@ export default function Header({ siteInfo = null }) {
                 height={30}
                 className="rounded-full border border-brand-cyan/40"
               />
-              <span className="font-display font-bold text-main text-base tracking-wider">
+              <span className="font-display font-bold text-main text-base tracking-wider truncate max-w-[200px]">
                 {brandName.primary.toUpperCase()}
               </span>
             </Link>
