@@ -14,7 +14,7 @@ export async function register() {
         );
       } else {
         console.log(
-          `[Instrumentation] Auto-migration complete (${result.appliedCount} applied, ${result.pendingCount} already present)`
+          `[Instrumentation] Auto-migration complete (${result.appliedCount ?? 0} applied, ${result.skippedCount ?? 0} skipped)`
         );
       }
     } catch (err) {

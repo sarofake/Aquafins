@@ -47,8 +47,15 @@ if (!getDbConnectionString()) {
 const result = await runDbMigrations();
 
 if (result.status === 'completed') {
+  const applied = result.appliedCount ?? 0;
+  const skipped = result.skippedCount ?? 0;
+  const superseded =
+    result.results?.filter((item) => item.status === 'superseded_by_baseline').length ?? 0;
+
   console.log(
-    `[db:migrate] Schema up to date (${result.appliedCount} applied, ${result.pendingCount} already present) in ${result.directory}`
+    applied === 0
+      ? `[db:migrate] Schema already present — nothing created (${skipped + superseded} files recorded)`
+      : `[db:migrate] Schema updated — ${applied} applied, ${superseded} superseded, ${skipped} skipped`
   );
 } else {
   console.warn(`[db:migrate] ${result.status.toUpperCase()}:`, result.message || result.error || '');

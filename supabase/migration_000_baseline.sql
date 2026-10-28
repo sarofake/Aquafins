@@ -28,6 +28,15 @@ CREATE TABLE IF NOT EXISTS public.categories (
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Converge projects created before the baseline existed: add only what is
+-- missing, never touch existing columns or data.
+ALTER TABLE public.categories ADD COLUMN IF NOT EXISTS name_bn         TEXT NOT NULL DEFAULT '';
+ALTER TABLE public.categories ADD COLUMN IF NOT EXISTS description_bn  TEXT NOT NULL DEFAULT '';
+ALTER TABLE public.categories ADD COLUMN IF NOT EXISTS parent_id       BIGINT REFERENCES public.categories(id) ON DELETE SET NULL;
+ALTER TABLE public.categories ADD COLUMN IF NOT EXISTS image           TEXT NOT NULL DEFAULT '';
+ALTER TABLE public.categories ADD COLUMN IF NOT EXISTS image_public_id TEXT NOT NULL DEFAULT '';
+ALTER TABLE public.categories ADD COLUMN IF NOT EXISTS updated_at      TIMESTAMPTZ NOT NULL DEFAULT now();
+
 CREATE INDEX IF NOT EXISTS categories_parent_idx   ON public.categories (parent_id);
 CREATE INDEX IF NOT EXISTS categories_sort_idx     ON public.categories (sort_order ASC);
 CREATE INDEX IF NOT EXISTS categories_slug_idx     ON public.categories (slug);
@@ -59,7 +68,59 @@ CREATE TABLE IF NOT EXISTS public.products (
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Query-optimized composite and partial indexes
+-- Converge pre-existing products tables (older deployments) with the columns
+-- the app reads. slug is added nullable, backfilled, then locked down below.
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS name_bn         TEXT NOT NULL DEFAULT '';
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS slug            TEXT;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS category_id     BIGINT REFERENCES public.categories(id) ON DELETE SET NULL;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS original_price  NUMERIC(10,2);
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS description_bn  TEXT NOT NULL DEFAULT '';
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS images          JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS image_public_id TEXT NOT NULL DEFAULT '';
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS keywords        TEXT NOT NULL DEFAULT '';
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS quantity        TEXT NOT NULL DEFAULT '';
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS quantity_bn     TEXT NOT NULL DEFAULT '';
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS deals           BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS updated_at      TIMESTAMPTZ NOT NULL DEFAULT now();
+
+-- Backfill slugs for rows that do not have one yet (same rules as the legacy
+-- migration_006). Rows that already have a slug are left untouched.
+DO $$
+DECLARE
+  r record;
+  base text;
+  candidate text;
+  n integer;
+BEGIN
+  FOR r IN
+    SELECT id, name FROM public.products WHERE slug IS NULL OR slug = '' ORDER BY id
+  LOOP
+    base := nullif(
+      trim(both '-' from regexp_replace(lower(trim(coalesce(r.name, ''))), '[^a-z0-9]+', '-', 'g')),
+      ''
+    );
+    IF base IS NULL THEN
+      base := 'product-' || r.id;
+    END IF;
+
+    candidate := base;
+    n := 2;
+    WHILE EXISTS (SELECT 1 FROM public.products p WHERE p.slug = candidate AND p.id <> r.id) LOOP
+      candidate := base || '-' || n;
+      n := n + 1;
+    END LOOP;
+
+    UPDATE public.products SET slug = candidate WHERE id = r.id;
+  END LOOP;
+END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM public.products WHERE slug IS NULL OR slug = '') THEN
+    ALTER TABLE public.products ALTER COLUMN slug SET NOT NULL;
+  END IF;
+END $$;
+
 CREATE UNIQUE INDEX IF NOT EXISTS products_slug_key       ON public.products (slug);
 CREATE INDEX IF NOT EXISTS products_category_idx         ON public.products (category);
 CREATE INDEX IF NOT EXISTS products_category_id_idx      ON public.products (category_id);
@@ -102,6 +163,8 @@ CREATE TABLE IF NOT EXISTS public.site_info (
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+ALTER TABLE public.site_info ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
 -- ---------------------------------------------------------------------------
 -- 5. contact_messages (Customer inquiries & order inquiries)
 -- ---------------------------------------------------------------------------
@@ -116,6 +179,8 @@ CREATE TABLE IF NOT EXISTS public.contact_messages (
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE public.contact_messages ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
 
 CREATE INDEX IF NOT EXISTS contact_messages_created_idx ON public.contact_messages (created_at DESC);
 CREATE INDEX IF NOT EXISTS contact_messages_status_idx  ON public.contact_messages (status);
@@ -159,9 +224,7 @@ VALUES
   ('Food & Accessories', 'food-accessories',  'Utensils', 'Pellets, Flakes, Filters & LED Lighting', 4),
   ('Scaping',            'scaping',           'Mountain', 'Aquascaping Rocks, Driftwood & Substrates', 5),
   ('Combo',              'combo',             'Package',  'Bundle deals and combo packs',               6)
-ON CONFLICT (slug) DO UPDATE SET
-  icon = EXCLUDED.icon,
-  sort_order = EXCLUDED.sort_order;
+ON CONFLICT (slug) DO NOTHING;   -- never overwrite an existing category (icon/order may be edited)
 
 -- Site info and Announcement defaults
 INSERT INTO public.site_info (key, value) VALUES
@@ -177,11 +240,6 @@ INSERT INTO public.site_info (key, value) VALUES
   ('currency',              '৳'),
   ('currency_code',         'BDT'),
   ('min_order_amount',      '500')
-ON CONFLICT (key) DO UPDATE SET
-  value = CASE
-    WHEN public.site_info.value = '' THEN EXCLUDED.value
-    ELSE public.site_info.value
-  END,
-  updated_at = now();
+ON CONFLICT (key) DO NOTHING;   -- never overwrite admin-edited site settings
 
 COMMIT;
