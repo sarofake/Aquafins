@@ -7,7 +7,7 @@ export async function GET(req) {
 
   const cacheKey = `categories:${includeAll ? 'all' : 'parent'}`;
 
-  return cachedResponse(cacheKey, 600, 1200, async () => {
+  return cachedResponse(cacheKey, 60, 120, async () => {
     if (!supabase) return { categories: [] };
 
     let query = supabase

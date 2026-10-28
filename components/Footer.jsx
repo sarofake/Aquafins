@@ -5,13 +5,17 @@ import { MapPin, Phone, Mail, ChevronRight, CreditCard, Building2 } from 'lucide
 import { useLanguage } from '@/context/LanguageContext';
 import BrandLogo from '@/components/BrandLogo';
 import { useBrand, splitBrandName, useSocialLinks, useContactInfo } from '@/hooks/useSiteInfo';
+import { useCategories } from '@/hooks/useCategories';
 
 export default function Footer({ siteInfo = null }) {
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const brand = useBrand(siteInfo);
   const brandName = splitBrandName(brand.name, brand.tagline);
   const socials = useSocialLinks(siteInfo);
   const contact = useContactInfo(siteInfo);
+
+  // Admin-managed categories, seeded from the server render.
+  const motherCategories = useCategories().categories.filter((c) => !c.parent_id);
 
   return (
     <footer className="bg-brand-dark border-t border-brand-border/60 text-muted text-sm mt-16 relative overflow-hidden">
@@ -121,35 +125,20 @@ export default function Footer({ siteInfo = null }) {
             <h4 className="text-main font-bold mb-4 text-sm uppercase tracking-wider">{t('motherCategories')}</h4>
             <ul className="space-y-2.5 text-xs">
               <li>
-                <Link href="/products?category=fish" className="hover:text-brand-cyan transition-colors">
-                  {t('fish')}
+                <Link href="/products" className="hover:text-brand-cyan transition-colors">
+                  {t('allProducts')}
                 </Link>
               </li>
-              <li>
-                <Link href="/products?category=plants" className="hover:text-brand-cyan transition-colors">
-                  {t('plants')}
-                </Link>
-              </li>
-              <li>
-                <Link href="/products?category=livestock" className="hover:text-brand-cyan transition-colors">
-                  {t('livestock')}
-                </Link>
-              </li>
-              <li>
-                <Link href="/products?category=food-accessories" className="hover:text-brand-cyan transition-colors">
-                  {t('foodAccessories')}
-                </Link>
-              </li>
-              <li>
-                <Link href="/products?category=scaping" className="hover:text-brand-cyan transition-colors">
-                  {t('scaping')}
-                </Link>
-              </li>
-              <li>
-                <Link href="/products?category=combo" className="hover:text-brand-cyan transition-colors">
-                  {t('combo')}
-                </Link>
-              </li>
+              {motherCategories.map((cat) => (
+                <li key={cat.id}>
+                  <Link
+                    href={`/products?category=${cat.slug}`}
+                    className="hover:text-brand-cyan transition-colors"
+                  >
+                    {lang === 'bn' ? cat.name_bn || cat.name : cat.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 

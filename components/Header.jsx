@@ -7,24 +7,20 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useBrand, splitBrandName, useSocialLinks, useContactInfo } from '@/hooks/useSiteInfo';
+import { useCategories } from '@/hooks/useCategories';
+import { resolveCategoryIcon, categoryAccent } from '@/lib/categoryIcons';
 import {
   Search,
   Menu,
   X,
   Phone,
   Home,
-  Fish,
-  Leaf,
-  Utensils,
   Grid,
-  Shell,
-  Mountain,
   Sun,
   Moon,
   Globe,
   Tag,
   Archive,
-  Package,
 } from 'lucide-react';
 
 export default function Header({ siteInfo = null }) {
@@ -39,6 +35,26 @@ export default function Header({ siteInfo = null }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isScrolled, setIsScrolled] = useState(false);
+
+  // Categories come from the database (seeded by the site layout), so a
+  // category an admin adds, renames or deletes appears here without a code
+  // change.
+  const { categories } = useCategories();
+  const motherCategories = categories.filter((c) => !c.parent_id);
+
+  // usePathname() excludes the query string, so the selected category is read
+  // from the URL after mount (and on every navigation).
+  const [activeCategory, setActiveCategory] = useState('');
+  useEffect(() => {
+    const readCategory = () => {
+      try {
+        setActiveCategory(new URLSearchParams(window.location.search).get('category') || '');
+      } catch {
+        setActiveCategory('');
+      }
+    };
+    readCategory();
+  }, [pathname]);
 
   const isHomeActive = pathname === '/' || pathname === '/home';
   const isProductsActive = pathname === '/products';
@@ -343,57 +359,31 @@ export default function Header({ siteInfo = null }) {
               <Grid className="w-3.5 h-3.5" /> {t('allProducts')}
             </Link>
 
-            <span className="text-brand-border">|</span>
+            {motherCategories.length > 0 && (
+              <>
+                <span className="text-brand-border">|</span>
 
-            <Link
-              href="/products?category=plants"
-              className="hover:text-brand-cyan transition-colors flex items-center gap-1.5 text-muted"
-            >
-              <Leaf className="w-3.5 h-3.5 text-green-400" /> {t('plants')}
-            </Link>
+                {motherCategories.map((cat, index) => {
+                  const Icon = resolveCategoryIcon(cat.icon);
+                  const accent = categoryAccent(index);
+                  const label = lang === 'bn' ? cat.name_bn || cat.name : cat.name;
 
-            <Link
-              href="/products?category=fish"
-              className="hover:text-brand-cyan transition-colors flex items-center gap-1.5 text-muted"
-            >
-              <Fish className="w-3.5 h-3.5 text-brand-cyan" /> {t('fish')}
-            </Link>
-
-            <Link
-              href="/products?category=livestock"
-              className="hover:text-brand-cyan transition-colors flex items-center gap-1.5 text-muted"
-            >
-              <Shell className="w-3.5 h-3.5 text-purple-400" /> {t('livestock')}
-            </Link>
-
-            <Link
-              href="/products?category=food-accessories"
-              className="hover:text-brand-cyan transition-colors flex items-center gap-1.5 text-muted"
-            >
-              <Utensils className="w-3.5 h-3.5 text-yellow-400" /> {t('foodAccessories')}
-            </Link>
-
-            <Link
-              href="/products?category=scaping"
-              className={
-                pathname.includes('category=scaping')
-                  ? 'text-brand-cyan font-bold flex items-center gap-1.5 border-b-2 border-brand-cyan pb-0.5'
-                  : 'hover:text-brand-cyan transition-colors flex items-center gap-1.5 text-muted'
-              }
-            >
-              <Mountain className="w-3.5 h-3.5 text-amber-400" /> {t('scaping')}
-            </Link>
-
-            <Link
-              href="/products?category=combo"
-              className={
-                pathname.includes('category=combo')
-                  ? 'text-brand-cyan font-bold flex items-center gap-1.5 border-b-2 border-brand-cyan pb-0.5'
-                  : 'hover:text-brand-cyan transition-colors flex items-center gap-1.5 text-muted'
-              }
-            >
-              <Package className="w-3.5 h-3.5 text-rose-400" /> {t('combo')}
-            </Link>
+                  return (
+                    <Link
+                      key={cat.id}
+                      href={`/products?category=${cat.slug}`}
+                      className={
+                        activeCategory === cat.slug
+                          ? 'text-brand-cyan font-bold flex items-center gap-1.5 border-b-2 border-brand-cyan pb-0.5'
+                          : 'hover:text-brand-cyan transition-colors flex items-center gap-1.5 text-muted'
+                      }
+                    >
+                      <Icon className={`w-3.5 h-3.5 ${accent.color}`} /> {label}
+                    </Link>
+                  );
+                })}
+              </>
+            )}
 
             <span className="text-brand-border">|</span>
 
@@ -466,48 +456,22 @@ export default function Header({ siteInfo = null }) {
             </Link>
             <hr className="border-brand-border/60" />
             <span className="text-[10px] text-subtle font-bold uppercase tracking-wider">{t('motherCategories')}</span>
-            <Link
-              href="/products?category=plants"
-              onClick={() => setMobileMenuOpen(false)}
-              className="hover:text-brand-cyan flex items-center gap-2"
-            >
-              <Leaf className="w-4 h-4 text-green-400" /> {t('plants')}
-            </Link>
-            <Link
-              href="/products?category=fish"
-              onClick={() => setMobileMenuOpen(false)}
-              className="hover:text-brand-cyan flex items-center gap-2"
-            >
-              <Fish className="w-4 h-4 text-brand-cyan" /> {t('fish')}
-            </Link>
-            <Link
-              href="/products?category=livestock"
-              onClick={() => setMobileMenuOpen(false)}
-              className="hover:text-brand-cyan flex items-center gap-2"
-            >
-              <Shell className="w-4 h-4 text-purple-400" /> {t('livestock')}
-            </Link>
-            <Link
-              href="/products?category=food-accessories"
-              onClick={() => setMobileMenuOpen(false)}
-              className="hover:text-brand-cyan flex items-center gap-2"
-            >
-              <Utensils className="w-4 h-4 text-yellow-400" /> {t('foodAccessories')}
-            </Link>
-            <Link
-              href="/products?category=scaping"
-              onClick={() => setMobileMenuOpen(false)}
-              className="hover:text-brand-cyan flex items-center gap-2"
-            >
-              <Mountain className="w-4 h-4 text-amber-400" /> {t('scaping')}
-            </Link>
-            <Link
-              href="/products?category=combo"
-              onClick={() => setMobileMenuOpen(false)}
-              className="hover:text-brand-cyan flex items-center gap-2"
-            >
-              <Package className="w-4 h-4 text-rose-400" /> {t('combo')}
-            </Link>
+            {motherCategories.map((cat, index) => {
+              const Icon = resolveCategoryIcon(cat.icon);
+              const accent = categoryAccent(index);
+              const label = lang === 'bn' ? cat.name_bn || cat.name : cat.name;
+
+              return (
+                <Link
+                  key={cat.id}
+                  href={`/products?category=${cat.slug}`}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="hover:text-brand-cyan flex items-center gap-2"
+                >
+                  <Icon className={`w-4 h-4 ${accent.color}`} /> {label}
+                </Link>
+              );
+            })}
             <hr className="border-brand-border/60" />
             <Link
               href="/archive"

@@ -12,15 +12,6 @@ import FormattedText from '@/components/FormattedText';
 import { useLanguage } from '@/context/LanguageContext';
 import { formatPrice } from '@/lib/currency';
 
-const DEFAULT_CATEGORIES = [
-  { id: 'plants', slug: 'plants', name: 'Plants', parent_id: null },
-  { id: 'fish', slug: 'fish', name: 'Fish', parent_id: null },
-  { id: 'livestock', slug: 'livestock', name: 'Livestock', parent_id: null },
-  { id: 'food-accessories', slug: 'food-accessories', name: 'Food & Accessories', parent_id: null },
-  { id: 'scaping', slug: 'scaping', name: 'Scaping', parent_id: null },
-  { id: 'combo', slug: 'combo', name: 'Combo', parent_id: null },
-];
-
 function matchesCategory(product, selected, categories) {
   if (selected === 'all') return true;
 
@@ -47,7 +38,7 @@ function DealsCatalogContent() {
   const [orderProduct, setOrderProduct] = useState(null);
   const [detailProduct, setDetailProduct] = useState(null);
 
-  const categories = dbCategories.length > 0 ? dbCategories : DEFAULT_CATEGORIES;
+  const categories = dbCategories;
   const motherCategories = useMemo(
     () => categories.filter((c) => !c.parent_id),
     [categories]

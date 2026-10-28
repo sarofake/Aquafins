@@ -3,12 +3,24 @@
 import { X, Phone, ExternalLink } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useBrand, useContactInfo, useSocialLinks } from '@/hooks/useSiteInfo';
+import { useCategories } from '@/hooks/useCategories';
 import { formatPrice } from '@/lib/currency';
 import FormattedText from '@/components/FormattedText';
 
 export default function OrderModal({ product, onClose }) {
   const { lang, t } = useLanguage();
+  const { categories } = useCategories();
   if (!product) return null;
+
+  // Category names live in the database now, so an admin rename must win over
+  // the template translation.
+  const categoryLabel = (() => {
+    const cat = categories.find(
+      (c) => c.slug === product.category || String(c.id) === String(product.category_id)
+    );
+    if (!cat) return product.category || '';
+    return lang === 'bn' ? cat.name_bn || cat.name : cat.name;
+  })();
 
   const prodName = lang === 'bn' ? (product.name_bn || product.name) : product.name;
   const prodQty = lang === 'bn' ? (product.quantity_bn || product.quantity) : product.quantity;
@@ -68,7 +80,7 @@ Please let me know availability and delivery details.`;
           )}
           <div className="flex-1 min-w-0">
             <h4 className="font-bold text-sm text-main truncate">{prodName} {prodQty && <span className="text-xs text-muted font-normal">({prodQty})</span>}</h4>
-            <p className="text-xs text-muted truncate">{t(product.category) || product.category}</p>
+            <p className="text-xs text-muted truncate">{categoryLabel || t('allProducts')}</p>
             <p className="text-sm font-extrabold text-brand-cyan mt-1">{formatPrice(product.price)}</p>
           </div>
         </div>

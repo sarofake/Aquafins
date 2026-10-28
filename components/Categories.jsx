@@ -2,98 +2,35 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import { Fish, Leaf, Utensils, Shell, Mountain, ChevronLeft, ChevronRight, Grid, Package } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Grid } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
-import { useTheme } from '@/context/ThemeContext';
 import { useCategories } from '@/hooks/useCategories';
+import { categoryAccent, resolveCategoryIcon } from '@/lib/categoryIcons';
 import FormattedText from '@/components/FormattedText';
-
-const DEFAULT_CATEGORIES = [
-  {
-    id: 'plants',
-    slug: 'plants',
-    name: 'Plants',
-    description: 'Live Aquatic Plants & Moss',
-    icon: Leaf,
-    image: '',
-    color: 'text-emerald-400',
-    bgColor: 'bg-emerald-500/10',
-  },
-  {
-    id: 'fish',
-    slug: 'fish',
-    name: 'Fish',
-    description: 'Bettas & Exotic Freshwater Fish',
-    icon: Fish,
-    image: '',
-    color: 'text-brand-cyan',
-    bgColor: 'bg-brand-cyan/10',
-  },
-  {
-    id: 'livestock',
-    slug: 'livestock',
-    name: 'Livestock',
-    description: 'Shrimps, Snails & Invertebrates',
-    icon: Shell,
-    image: '',
-    color: 'text-purple-400',
-    bgColor: 'bg-purple-500/10',
-  },
-  {
-    id: 'food-accessories',
-    slug: 'food-accessories',
-    name: 'Food & Accessories',
-    description: 'Nutrition, Filters & Lighting',
-    icon: Utensils,
-    image: '',
-    color: 'text-yellow-400',
-    bgColor: 'bg-yellow-500/10',
-  },
-  {
-    id: 'scaping',
-    slug: 'scaping',
-    name: 'Scaping',
-    description: 'Rocks, Driftwood & Substrates',
-    icon: Mountain,
-    image: '',
-    color: 'text-amber-400',
-    bgColor: 'bg-amber-500/10',
-  },
-  {
-    id: 'combo',
-    slug: 'combo',
-    name: 'Combo',
-    description: 'Special Bundles & Value Deals',
-    icon: Package,
-    image: '',
-    color: 'text-rose-400',
-    bgColor: 'bg-rose-500/10',
-  },
-];
 
 export default function Categories() {
   const { lang, t } = useLanguage();
-  const { resolvedTheme } = useTheme();
   const { categories: dbCategories } = useCategories();
 
-  const categories = (dbCategories.length > 0
-    ? dbCategories.filter((c) => !c.parent_id).map((c) => {
-        const fallback = DEFAULT_CATEGORIES.find((d) => d.slug === c.slug) || {};
-        return {
-          id: c.id,
-          slug: c.slug,
-          name: c.name,
-          name_bn: c.name_bn,
-          description: c.description || fallback.description || '',
-          description_bn: c.description_bn,
-          image: c.image || '',
-          icon: fallback.icon || Grid,
-          color: fallback.color || 'text-brand-cyan',
-          bgColor: fallback.bgColor || 'bg-brand-cyan/10',
-        };
-      })
-    : DEFAULT_CATEGORIES
-  ).slice(0, 4);
+  // The database is the only source. A deployment with no categories shows no
+  // section at all instead of the template's hardcoded list.
+  const categories = dbCategories
+    .filter((c) => !c.parent_id)
+    .map((c, index) => {
+      const accent = categoryAccent(index);
+      return {
+        id: c.id,
+        slug: c.slug,
+        name: c.name,
+        name_bn: c.name_bn,
+        description: c.description || '',
+        description_bn: c.description_bn,
+        image: c.image || '',
+        icon: resolveCategoryIcon(c.icon),
+        color: accent.color,
+        bgColor: accent.bgColor,
+      };
+    });
 
   const scrollerRef = useRef(null);
   const [atStart, setAtStart] = useState(true);
@@ -119,6 +56,10 @@ export default function Categories() {
     const step = item ? item.getBoundingClientRect().width + 20 : el.clientWidth * 0.8;
     el.scrollBy({ left: direction * step, behavior: 'smooth' });
   };
+
+  if (categories.length === 0) {
+    return null;
+  }
 
   return (
     <section id="featured" className="max-w-7xl mx-auto px-4 lg:px-12 py-16">
@@ -172,8 +113,8 @@ export default function Categories() {
       >
         {categories.map((cat) => {
           const IconComp = cat.icon || Grid;
-          const catName = lang === 'bn' ? (cat.name_bn || t(cat.slug) || cat.name) : cat.name;
-          const catDesc = lang === 'bn' ? (cat.description_bn || cat.description) : cat.description;
+          const catName = lang === 'bn' ? cat.name_bn || cat.name : cat.name;
+          const catDesc = lang === 'bn' ? cat.description_bn || cat.description : cat.description;
 
           return (
             <Link
