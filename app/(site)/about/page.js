@@ -13,38 +13,43 @@ import {
   Compass,
 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import { useBrand, useContactInfo } from '@/hooks/useSiteInfo';
+import { brandify } from '@/lib/brandText';
 
 export default function AboutPage() {
   const { t } = useLanguage();
+  const brand = useBrand();
+  const contact = useContactInfo();
+  const bx = (text) => brandify(text, brand.name);
 
   const highlights = [
     {
       icon: Fish,
       color: 'text-brand-cyan',
       bg: 'bg-brand-cyan/10',
-      title: t('exoticFishTitle'),
-      text: t('exoticFishDesc'),
+      title: bx(t('exoticFishTitle')),
+      text: bx(t('exoticFishDesc')),
     },
     {
       icon: Leaf,
       color: 'text-green-400',
       bg: 'bg-green-500/10',
-      title: t('livePlantsTitle'),
-      text: t('livePlantsDesc'),
+      title: bx(t('livePlantsTitle')),
+      text: bx(t('livePlantsDesc')),
     },
     {
       icon: Package,
       color: 'text-yellow-400',
       bg: 'bg-yellow-500/10',
-      title: t('equipmentTitle'),
-      text: t('equipmentDesc'),
+      title: bx(t('equipmentTitle')),
+      text: bx(t('equipmentDesc')),
     },
     {
       icon: MapPin,
       color: 'text-blue-400',
       bg: 'bg-blue-500/10',
-      title: t('nationwideTitle'),
-      text: t('nationwideDesc'),
+      title: bx(t('nationwideTitle')),
+      text: bx(t('nationwideDesc')),
     },
   ];
 
@@ -53,22 +58,22 @@ export default function AboutPage() {
       icon: Target,
       color: 'text-brand-cyan',
       bg: 'bg-brand-cyan/10',
-      title: t('aboutGoalTitle'),
-      paragraphs: [t('aboutGoalDesc')],
+      title: bx(t('aboutGoalTitle')),
+      paragraphs: [bx(t('aboutGoalDesc'))],
     },
     {
       icon: Sparkles,
       color: 'text-yellow-400',
       bg: 'bg-yellow-500/10',
-      title: t('aboutSpecialtyTitle'),
-      paragraphs: [t('aboutSpecialtyDesc1'), t('aboutSpecialtyDesc2')],
+      title: bx(t('aboutSpecialtyTitle')),
+      paragraphs: [bx(t('aboutSpecialtyDesc1')), bx(t('aboutSpecialtyDesc2'))],
     },
     {
       icon: Compass,
       color: 'text-green-400',
       bg: 'bg-green-500/10',
-      title: t('aboutJourneyTitle'),
-      paragraphs: [t('aboutJourneyDesc1'), t('aboutJourneyDesc2')],
+      title: bx(t('aboutJourneyTitle')),
+      paragraphs: [bx(t('aboutJourneyDesc1')), bx(t('aboutJourneyDesc2'))],
     },
   ];
 
@@ -78,10 +83,10 @@ export default function AboutPage() {
       <div className="bg-brand-card border-b border-brand-border/40 py-14">
         <div className="max-w-7xl mx-auto px-4 lg:px-12">
           <h1 className="text-4xl md:text-5xl font-display font-bold text-main mb-3">
-            {t('aboutTitle')}
+            {bx(t('aboutTitle'))}
           </h1>
           <p className="text-muted text-sm max-w-2xl">
-            {t('aboutSubtitle')}
+            {bx(t('aboutSubtitle'))}
           </p>
         </div>
       </div>
@@ -94,13 +99,13 @@ export default function AboutPage() {
               {t('whoWeAre')}
             </span>
             <h2 className="text-3xl font-display font-bold text-main">
-              {t('aboutBrandTitle')}
+              {bx(t('aboutBrandTitle'))}
             </h2>
             <p className="text-muted text-sm leading-relaxed">
-              {t('aboutIntro1')}
+              {bx(t('aboutIntro1'))}
             </p>
             <p className="text-muted text-sm leading-relaxed">
-              {t('aboutIntro2')}
+              {bx(t('aboutIntro2'))}
             </p>
             <div className="flex flex-wrap gap-4 pt-2">
               <Link
@@ -173,7 +178,7 @@ export default function AboutPage() {
       {/* Tagline */}
       <section className="max-w-7xl mx-auto px-4 lg:px-12 py-14">
         <p className="text-center text-brand-cyan font-display text-2xl md:text-3xl tracking-wide">
-          {t('aboutTagline')}
+          {bx(t('aboutTagline'))}
         </p>
       </section>
 
@@ -184,15 +189,15 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-muted">
             <div className="flex items-start gap-3">
               <MapPin className="w-5 h-5 text-brand-cyan flex-shrink-0 mt-0.5" />
-              <span>{t('dhakaBangladesh')}</span>
+              <span>{contact.address || t('dhakaBangladesh')}</span>
             </div>
             <div className="flex items-center gap-3">
               <Phone className="w-5 h-5 text-brand-cyan flex-shrink-0" />
-              <a href="tel:01787283804" className="hover:text-brand-cyan transition-colors">01787-283804</a>
+              <a href={contact.phoneHref} className="hover:text-brand-cyan transition-colors">{contact.phone}</a>
             </div>
             <div className="flex items-center gap-3">
               <Mail className="w-5 h-5 text-brand-cyan flex-shrink-0" />
-              <span>support@aquafins.bd</span>
+              <a href={`mailto:${contact.email}`} className="hover:text-brand-cyan transition-colors">{contact.email}</a>
             </div>
           </div>
         </div>

@@ -4,11 +4,13 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Megaphone, ArrowRight, X, Sparkles } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
-import { useSiteInfo } from '@/hooks/useSiteInfo';
+import { useSiteInfo, useBrand } from '@/hooks/useSiteInfo';
+import { brandify } from '@/lib/brandText';
 
 export default function AnnouncementBanner() {
   const { lang } = useLanguage();
   const { info, loading } = useSiteInfo();
+  const brand = useBrand();
   const [dismissed, setDismissed] = useState(false);
   const containerRef = useRef(null);
   const textRef = useRef(null);
@@ -18,7 +20,10 @@ export default function AnnouncementBanner() {
   const isEnabled = info.announcement_enabled !== 'false';
   const textEn = info.announcement_text || info.announcement || '';
   const textBn = info.announcement_text_bn || info.announcement_bn || '';
-  const activeText = lang === 'bn' ? (textBn || textEn) : (textEn || textBn);
+  const activeText = brandify(
+    lang === 'bn' ? (textBn || textEn) : (textEn || textBn),
+    brand.name
+  );
   const linkUrl = info.announcement_link || '';
   const badgeText = lang === 'bn'
     ? (info.announcement_badge_bn || info.announcement_badge || 'বিজ্ঞপ্তি')

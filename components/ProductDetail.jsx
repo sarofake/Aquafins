@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useCategories } from '@/hooks/useCategories';
+import { useBrand } from '@/hooks/useSiteInfo';
 import { formatPrice } from '@/lib/currency';
 import { productHref } from '@/lib/slugify';
 import FormattedText from '@/components/FormattedText';
@@ -27,6 +28,7 @@ import { extractYouTubeId, getYouTubeThumbnailUrl, getYouTubeEmbedUrl } from '@/
 export default function ProductDetail({ product }) {
   const { lang, t } = useLanguage();
   const { categories } = useCategories();
+  const brand = useBrand();
   const [activeIndex, setActiveIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [orderOpen, setOrderOpen] = useState(false);
@@ -46,7 +48,7 @@ export default function ProductDetail({ product }) {
       try {
         await navigator.share({
           title: lang === 'bn' ? product.name_bn || product.name : product.name,
-          text: `Check out ${product.name} on Aqua Fins Bangladesh`,
+          text: `Check out ${product.name} on ${brand.name}`,
           url: fullUrl,
         });
         return;

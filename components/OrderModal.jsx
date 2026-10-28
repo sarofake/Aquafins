@@ -2,12 +2,9 @@
 
 import { X, Phone, ExternalLink } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import { useBrand, useContactInfo, useSocialLinks } from '@/hooks/useSiteInfo';
 import { formatPrice } from '@/lib/currency';
 import FormattedText from '@/components/FormattedText';
-
-const WHATSAPP_NUMBER = '8801787283804';
-const MESSENGER_URL = 'https://m.me/aquafinsbangladesh';
-const FACEBOOK_PAGE_URL = 'https://www.facebook.com/aquafinsbangladesh/';
 
 export default function OrderModal({ product, onClose }) {
   const { lang, t } = useLanguage();
@@ -18,7 +15,7 @@ export default function OrderModal({ product, onClose }) {
   const prodDesc = lang === 'bn' ? (product.description_bn || product.description) : product.description;
 
   const whatsappText = lang === 'bn'
-    ? `হ্যালো অ্যাকুয়া ফিন্স বাংলাদেশ! আমি এই পণ্যটি অর্ডার করতে চাই:
+    ? `হ্যালো ${brand.name}! আমি এই পণ্যটি অর্ডার করতে চাই:
 
 🆔 *পণ্য আইডি:* #${product.id || 'N/A'}
 📦 *পণ্য:* ${prodName}
@@ -26,7 +23,7 @@ export default function OrderModal({ product, onClose }) {
 📁 *ক্যাটাগরি:* ${product.category || 'অ্যাকোয়ারিয়াম'}
 
 দয়া করে স্টক ও ডেলিভারির বিস্তারিত জানান।`
-    : `Hello Aqua Fins Bangladesh! I would like to order:
+    : `Hello ${brand.name}! I would like to order:
 
 🆔 *Product ID:* #${product.id || 'N/A'}
 📦 *Product:* ${prodName}
@@ -35,7 +32,8 @@ export default function OrderModal({ product, onClose }) {
 
 Please let me know availability and delivery details.`;
 
-  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappText)}`;
+  const whatsappUrl = `${socials.whatsapp}?text=${encodeURIComponent(whatsappText)}`;
+  const messengerUrl = socials.messenger || socials.facebook;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
@@ -103,7 +101,7 @@ Please let me know availability and delivery details.`;
 
           {/* Send in Messenger */}
           <a
-            href={MESSENGER_URL}
+            href={messengerUrl}
             target="_blank"
             rel="noopener noreferrer"
             onClick={onClose}
@@ -117,7 +115,7 @@ Please let me know availability and delivery details.`;
 
           {/* Facebook Page Link */}
           <a
-            href={FACEBOOK_PAGE_URL}
+            href={socials.facebook}
             target="_blank"
             rel="noopener noreferrer"
             onClick={onClose}

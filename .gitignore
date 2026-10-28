@@ -14,6 +14,7 @@ Thumbs.db
 # Environment files (never commit secrets)
 .env
 .env.*
+!.env.example
 
 # Local DB/admin tooling — contains live Supabase tokens & DB passwords
 scripts/

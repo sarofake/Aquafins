@@ -55,7 +55,7 @@ export async function generateMetadata({ params }) {
   const product = await getProductBySlug(slug);
 
   if (!product) {
-    return { title: 'Product not found | Aqua Fins Bangladesh' };
+    return { title: 'Product not found' };
   }
 
   const description = (product.description || '')
@@ -64,10 +64,11 @@ export async function generateMetadata({ params }) {
     .slice(0, 160);
 
   return {
-    title: `${product.name} | Aqua Fins Bangladesh`,
+    // The root layout appends " | <site name>" via its title template, so the
+    // brand name is never hardcoded here.
+    title: product.name,
     description: description || undefined,
     openGraph: {
-      title: `${product.name} | Aqua Fins Bangladesh`,
       description: description || undefined,
       images: product.image ? [{ url: product.image }] : undefined,
       type: 'website',

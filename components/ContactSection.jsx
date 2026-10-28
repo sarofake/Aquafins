@@ -16,9 +16,13 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import { useBrand, useContactInfo, useSocialLinks } from '@/hooks/useSiteInfo';
 
 export default function ContactSection({ id = 'contact', showHeader = true, showInfo = true }) {
   const { t } = useLanguage();
+  const brand = useBrand();
+  const contact = useContactInfo();
+  const socials = useSocialLinks();
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -60,9 +64,9 @@ export default function ContactSection({ id = 'contact', showHeader = true, show
 
       // If sendToWhatsapp option checked, format & open WhatsApp link
       if (sendToWhatsapp) {
-        const text = `*New Contact Message - Aqua Fins*\n\n*Name:* ${formData.name}\n*Phone:* ${formData.phone}\n*Email:* ${formData.email || 'N/A'}\n*Topic:* ${formData.topic}\n*Message:* ${formData.message}`;
+        const text = `*New Contact Message - ${brand.name}*\n\n*Name:* ${formData.name}\n*Phone:* ${formData.phone}\n*Email:* ${formData.email || 'N/A'}\n*Topic:* ${formData.topic}\n*Message:* ${formData.message}`;
         const encoded = encodeURIComponent(text);
-        window.open(`https://wa.me/8801787283804?text=${encoded}`, '_blank');
+        window.open(`${socials.whatsapp}?text=${encoded}`, '_blank');
       }
 
       setFormData({
@@ -81,8 +85,8 @@ export default function ContactSection({ id = 'contact', showHeader = true, show
   };
 
   const handleOpenWhatsapp = () => {
-    const text = `Hello Aqua Fins Bangladesh! I have an inquiry:`;
-    window.open(`https://wa.me/8801787283804?text=${encodeURIComponent(text)}`, '_blank');
+    const text = `Hello ${brand.name}! I have an inquiry:`;
+    window.open(`${socials.whatsapp}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   return (
@@ -119,7 +123,7 @@ export default function ContactSection({ id = 'contact', showHeader = true, show
             <div className="space-y-4">
               {/* Call Hotline */}
               <a
-                href="tel:01787283804"
+                href={contact.phoneHref}
                 className="flex items-center gap-4 p-3.5 rounded-xl bg-brand-dark/50 border border-brand-border/60 hover:border-brand-cyan/60 hover:bg-brand-dark transition-all group"
               >
                 <div className="w-10 h-10 rounded-lg bg-brand-cyan/10 border border-brand-cyan/30 flex items-center justify-center text-brand-cyan group-hover:scale-105 transition-transform flex-shrink-0">
@@ -128,7 +132,7 @@ export default function ContactSection({ id = 'contact', showHeader = true, show
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-subtle font-medium">{t('callUsDirect')}</p>
                   <p className="text-sm font-bold text-main group-hover:text-brand-cyan transition-colors">
-                    01787-283804
+                    {contact.phone}
                   </p>
                 </div>
                 <ArrowRight className="w-4 h-4 text-subtle group-hover:text-brand-cyan group-hover:translate-x-1 transition-all" />
@@ -147,7 +151,7 @@ export default function ContactSection({ id = 'contact', showHeader = true, show
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-emerald-400/80 font-medium">{t('whatsappDirect')}</p>
                   <p className="text-sm font-bold text-emerald-300">
-                    +880 1787-283804
+                    {contact.whatsappNumber}
                   </p>
                 </div>
                 <ArrowRight className="w-4 h-4 text-emerald-400/70 group-hover:text-emerald-300 group-hover:translate-x-1 transition-all" />
@@ -155,7 +159,7 @@ export default function ContactSection({ id = 'contact', showHeader = true, show
 
               {/* Messenger Direct */}
               <a
-                href="https://www.facebook.com/aquafinsbangladesh/"
+                href={socials.facebook}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-4 p-3.5 rounded-xl bg-brand-dark/50 border border-brand-border/60 hover:border-brand-cyan/60 hover:bg-brand-dark transition-all group"
@@ -168,7 +172,7 @@ export default function ContactSection({ id = 'contact', showHeader = true, show
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-subtle font-medium">{t('messengerDirect')}</p>
                   <p className="text-sm font-bold text-main group-hover:text-brand-cyan transition-colors">
-                    Aqua Fins Bangladesh
+                    {brand.name}
                   </p>
                 </div>
                 <ArrowRight className="w-4 h-4 text-subtle group-hover:text-brand-cyan group-hover:translate-x-1 transition-all" />
@@ -184,7 +188,7 @@ export default function ContactSection({ id = 'contact', showHeader = true, show
               </div>
               <div>
                 <h4 className="text-xs font-bold text-subtle uppercase tracking-wider">{t('locationTitle')}</h4>
-                <p className="text-sm font-semibold text-main mt-0.5">{t('locationDesc')}</p>
+                <p className="text-sm font-semibold text-main mt-0.5">{contact.address || t('locationDesc')}</p>
               </div>
             </div>
 

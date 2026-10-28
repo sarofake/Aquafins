@@ -2,16 +2,36 @@ import './globals.css';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { LanguageProvider } from '@/context/LanguageContext';
 import ThemeManager from '@/components/ThemeManager';
+import { getSiteInfo, brandFromSiteInfo } from '@/lib/serverSiteInfo';
 
-export const metadata = {
-  title: 'Aqua Fins Bangladesh | Premium Aquatics & Supplies',
-  description: 'Discover hand-picked collection of state-of-the-art aquariums, exotic livestock, aquatic plants, and premium supplies across Bangladesh.',
-  icons: {
-    icon: '/aquafinsbangladesh logo.png',
-    shortcut: '/aquafinsbangladesh logo.png',
-    apple: '/aquafinsbangladesh logo.png',
-  },
-};
+// Branding lives in the database (Admin → Site Info) so every deployment of this
+// template shows its own name, logo and favicon. ISR keeps metadata fresh
+// without a redeploy after the operator edits those settings.
+export const revalidate = 300;
+
+export async function generateMetadata() {
+  const info = await getSiteInfo();
+  const brand = brandFromSiteInfo(info);
+
+  return {
+    title: {
+      default: `${brand.name} | ${brand.tagline}`,
+      template: `%s | ${brand.name}`,
+    },
+    description: info.site_description || undefined,
+    applicationName: brand.name,
+    icons: {
+      icon: brand.faviconUrl,
+      shortcut: brand.faviconUrl,
+      apple: brand.faviconUrl,
+    },
+    openGraph: {
+      title: `${brand.name} | ${brand.tagline}`,
+      siteName: brand.name,
+      type: 'website',
+    },
+  };
+}
 
 export default function RootLayout({ children }) {
   return (

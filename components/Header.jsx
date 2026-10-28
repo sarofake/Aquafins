@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import BrandLogo from '@/components/BrandLogo';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { useBrand, splitBrandName, useSocialLinks, useContactInfo } from '@/hooks/useSiteInfo';
 import {
   Search,
   Menu,
@@ -26,11 +27,15 @@ import {
   Package,
 } from 'lucide-react';
 
-export default function Header() {
+export default function Header({ siteInfo = null }) {
   const pathname = usePathname();
   const router = useRouter();
   const { theme, toggleTheme } = useTheme();
   const { lang, toggleLang, t } = useLanguage();
+  const brand = useBrand(siteInfo);
+  const brandName = splitBrandName(brand.name);
+  const socials = useSocialLinks(siteInfo);
+  const contact = useContactInfo(siteInfo);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isScrolled, setIsScrolled] = useState(false);
@@ -95,11 +100,11 @@ export default function Header() {
               <div className="flex items-center gap-2">
                 {/* WhatsApp Icon */}
                 <a
-                  href="https://wa.me/8801787283804"
+                  href={socials.whatsapp}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-7 h-7 rounded-full bg-[#25D366]/15 hover:bg-[#25D366] text-[#25D366] hover:text-white border border-[#25D366]/40 flex items-center justify-center transition-all shadow-sm hover:scale-110"
-                  title="WhatsApp (01787-283804)"
+                  title={`WhatsApp (${contact.whatsappNumber})`}
                   aria-label="WhatsApp"
                 >
                   <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
@@ -109,7 +114,7 @@ export default function Header() {
 
                 {/* Facebook Icon */}
                 <a
-                  href="https://www.facebook.com/aquafinsbangladesh/"
+                  href={socials.facebook}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-7 h-7 rounded-full bg-[#1877F2]/15 hover:bg-[#1877F2] text-[#1877F2] hover:text-white border border-[#1877F2]/40 flex items-center justify-center transition-all shadow-sm hover:scale-110"
@@ -123,7 +128,7 @@ export default function Header() {
 
                 {/* YouTube Icon */}
                 <a
-                  href="https://www.youtube.com/@aquafinsbd"
+                  href={socials.youtube}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-7 h-7 rounded-full bg-[#FF0000]/15 hover:bg-[#FF0000] text-[#FF0000] hover:text-white border border-[#FF0000]/40 flex items-center justify-center transition-all shadow-sm hover:scale-110"
@@ -137,7 +142,7 @@ export default function Header() {
 
                 {/* Instagram Icon */}
                 <a
-                  href="https://www.instagram.com/aquafinsbd"
+                  href={socials.instagram}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-7 h-7 rounded-full bg-[#E4405F]/15 hover:bg-[#E4405F] text-[#E4405F] hover:text-white border border-[#E4405F]/40 flex items-center justify-center transition-all shadow-sm hover:scale-110"
@@ -151,7 +156,7 @@ export default function Header() {
 
                 {/* Threads Icon */}
                 <a
-                  href="https://www.threads.com/@aquafinsbd"
+                  href={socials.threads}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-7 h-7 rounded-full bg-brand-main/15 hover:bg-brand-cyan hover:text-brand-dark text-main border border-brand-border flex items-center justify-center transition-all shadow-sm hover:scale-110"
@@ -165,7 +170,7 @@ export default function Header() {
 
                 {/* TikTok Icon */}
                 <a
-                  href="https://www.tiktok.com/@aquafinsbd"
+                  href={socials.tiktok}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-7 h-7 rounded-full bg-[#EE1D52]/15 hover:bg-[#EE1D52] text-[#EE1D52] hover:text-white border border-[#EE1D52]/40 flex items-center justify-center transition-all shadow-sm hover:scale-110"
@@ -211,11 +216,11 @@ export default function Header() {
                 <span className="text-brand-border hidden sm:inline">|</span>
 
                 <a
-                  href="tel:01787283804"
+                  href={contact.phoneHref}
                   className="flex items-center gap-1.5 text-main font-medium hover:text-brand-cyan transition-colors"
                 >
                   <Phone className="w-3.5 h-3.5 text-brand-cyan" />
-                  <span>{t('hotline')}: <strong className="text-brand-cyan">01787-283804</strong></span>
+                  <span>{t('hotline')}: <strong className="text-brand-cyan">{contact.phone}</strong></span>
                 </a>
               </div>
             </div>
@@ -234,9 +239,9 @@ export default function Header() {
               {/* Logo */}
               <Link href="/" className="flex-shrink-0 group flex items-center gap-3">
                 <div className="relative w-11 h-11 overflow-hidden rounded-full border border-brand-cyan/40 bg-brand-card p-1 group-hover:scale-105 transition-transform shadow-md">
-                  <Image
-                    src="/aquafinsbangladesh logo.png"
-                    alt="Aqua Fins Bangladesh Logo"
+                  <BrandLogo
+                    src={brand.logoUrl}
+                    alt={`${brand.name} Logo`}
                     width={44}
                     height={44}
                     className="w-full h-full object-contain rounded-full"
@@ -245,11 +250,13 @@ export default function Header() {
                 </div>
                 <div className="flex flex-col">
                   <span className="font-display tracking-wider text-2xl font-bold text-main group-hover:text-brand-cyan transition-colors leading-none">
-                    AQUA FINS
+                    {brandName.primary.toUpperCase()}
                   </span>
-                  <span className="text-[10px] tracking-widest text-brand-cyan uppercase font-bold">
-                    BANGLADESH
-                  </span>
+                  {brandName.secondary && (
+                    <span className="text-[10px] tracking-widest text-brand-cyan uppercase font-bold">
+                      {brandName.secondary}
+                    </span>
+                  )}
                 </div>
               </Link>
 
@@ -310,14 +317,16 @@ export default function Header() {
           {/* Pinned Compact Brand Logo */}
           {isScrolled && (
             <Link href="/" className="flex items-center gap-2.5 mr-4 flex-shrink-0 animate-fade-in">
-              <Image
-                src="/aquafinsbangladesh logo.png"
-                alt="Logo"
+              <BrandLogo
+                src={brand.logoUrl}
+                alt={`${brand.name} Logo`}
                 width={30}
                 height={30}
                 className="rounded-full border border-brand-cyan/40"
               />
-              <span className="font-display font-bold text-main text-base tracking-wider">AQUA FINS</span>
+              <span className="font-display font-bold text-main text-base tracking-wider">
+                {brandName.primary.toUpperCase()}
+              </span>
             </Link>
           )}
 

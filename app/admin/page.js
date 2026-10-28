@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Package, Loader2, AlertCircle } from 'lucide-react';
+import { useBrand } from '@/hooks/useSiteInfo';
 
 export default function AdminLoginPage() {
+  const brand = useBrand();
   const router = useRouter();
   const [checking, setChecking] = useState(true);
   const [password, setPassword] = useState('');
@@ -66,7 +68,7 @@ export default function AdminLoginPage() {
             <Package className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-slate-900">Aqua Fins Admin</h1>
+            <h1 className="text-xl font-bold text-slate-900">{brand.name} Admin</h1>
             <p className="text-xs text-slate-500">Sign in to manage catalog, categories & carousel</p>
           </div>
         </div>

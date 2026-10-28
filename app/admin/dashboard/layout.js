@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Package, FolderTree, Sliders, LogOut, Loader2, LayoutDashboard, Settings } from 'lucide-react';
+import { useBrand } from '@/hooks/useSiteInfo';
 
 const navItems = [
   { href: '/admin/dashboard', label: 'Overview', icon: LayoutDashboard },
@@ -14,6 +15,7 @@ const navItems = [
 ];
 
 export default function DashboardLayout({ children }) {
+  const brand = useBrand();
   const router = useRouter();
   const pathname = usePathname();
   const [authed, setAuthed] = useState(null);
@@ -54,7 +56,7 @@ export default function DashboardLayout({ children }) {
               <Package className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-sm font-bold text-slate-900">Aqua Fins</h1>
+              <h1 className="text-sm font-bold text-slate-900">{brand.name}</h1>
               <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Admin Dashboard</p>
             </div>
           </Link>

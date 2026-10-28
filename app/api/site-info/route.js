@@ -13,7 +13,8 @@ const DEFAULT_SITE_INFO = {
 };
 
 export async function GET() {
-  return cachedResponse('site_info:public', 300, 600, async () => {
+  // Short TTL: branding edits must show up quickly for the operator.
+  return cachedResponse('site_info:public', 60, 120, async () => {
     if (!supabase) return { info: DEFAULT_SITE_INFO };
 
     try {

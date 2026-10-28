@@ -73,6 +73,8 @@ const SECTIONS = [
       { key: 'instagram', label: 'Instagram URL', placeholder: 'https://instagram.com/yourpage' },
       { key: 'youtube', label: 'YouTube URL', placeholder: 'https://youtube.com/yourchannel' },
       { key: 'tiktok', label: 'TikTok URL', placeholder: 'https://tiktok.com/@yourpage' },
+      { key: 'threads', label: 'Threads URL', placeholder: 'https://threads.com/@yourpage' },
+      { key: 'website', label: 'Website URL', placeholder: 'https://yourdomain.com' },
       { key: 'twitter', label: 'Twitter / X URL', placeholder: 'https://x.com/yourhandle' },
     ],
   },
@@ -323,6 +325,9 @@ export default function SiteInfoPage() {
       if (!res.ok) throw new Error(data.error || 'Save failed');
       setSuccessMsg('Site information saved successfully!');
       clearClientCache('admin_site_info');
+      // Public header/footer read the same data; drop the cached copy so the
+      // new name/logo shows up on the next page view.
+      clearClientCache('site_info_public');
     } catch (err) { setErrorMsg(err.message); } finally { setSaving(false); }
   };
 

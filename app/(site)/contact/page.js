@@ -5,6 +5,8 @@ import ContactSection from '@/components/ContactSection';
 import FormattedText from '@/components/FormattedText';
 import contact from '@/lib/content/contact';
 import { useLanguage } from '@/context/LanguageContext';
+import { useBrand, useContactInfo, useSocialLinks } from '@/hooks/useSiteInfo';
+import { brandify } from '@/lib/brandText';
 
 function FacebookIcon({ className }) {
   return (
@@ -16,13 +18,37 @@ function FacebookIcon({ className }) {
 
 export default function ContactPage() {
   const { lang } = useLanguage();
+  const brand = useBrand();
+  const contactInfo = useContactInfo();
+  const socials = useSocialLinks();
   const page = contact[lang] || contact.en;
 
+  const bx = (text) => brandify(text, brand.name);
+
   const channels = [
-    { icon: Phone, label: page.phoneLabel, value: page.phoneValue, href: page.phoneHref },
-    { icon: MessageCircle, label: page.whatsappLabel, value: page.whatsappValue, href: page.whatsappHref },
-    { icon: FacebookIcon, label: page.facebookLabel, value: page.facebookValue, href: page.facebookHref },
-    { icon: Globe, label: page.websiteLabel, value: page.websiteValue, href: page.websiteHref },
+    { icon: Phone, label: page.phoneLabel, value: contactInfo.phone, href: contactInfo.phoneHref },
+    {
+      icon: MessageCircle,
+      label: page.whatsappLabel,
+      value: contactInfo.whatsappNumber,
+      href: socials.whatsapp,
+    },
+    {
+      icon: FacebookIcon,
+      label: page.facebookLabel,
+      value: brand.name,
+      href: socials.facebook || page.facebookHref,
+    },
+    ...(contactInfo.website
+      ? [
+          {
+            icon: Globe,
+            label: page.websiteLabel,
+            value: contactInfo.website.replace(/^https?:\/\//i, ''),
+            href: contactInfo.websiteHref,
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -39,12 +65,12 @@ export default function ContactPage() {
       {/* Intro */}
       <section className="max-w-7xl mx-auto px-4 lg:px-12 pt-14">
         <div className="max-w-3xl space-y-4">
-          <h2 className="text-3xl font-display font-bold text-main">{page.brand}</h2>
+          <h2 className="text-3xl font-display font-bold text-main">{brand.name}</h2>
           <div className="text-sm text-muted leading-relaxed">
-            <FormattedText text={page.intro1} />
+            <FormattedText text={bx(page.intro1)} />
           </div>
           <div className="text-sm text-muted leading-relaxed">
-            <FormattedText text={page.intro2} />
+            <FormattedText text={bx(page.intro2)} />
           </div>
         </div>
       </section>
@@ -88,8 +114,8 @@ export default function ContactPage() {
                 <MapPin className="w-4 h-4" />
               </span>
               <div className="text-sm text-muted leading-relaxed">
-                <p className="font-semibold text-main">{page.addressName}</p>
-                <p>{page.addressCountry}</p>
+                <p className="font-semibold text-main">{brand.name}</p>
+                <p>{contactInfo.address || page.addressCountry}</p>
               </div>
             </div>
           </div>
@@ -107,7 +133,7 @@ export default function ContactPage() {
         </div>
 
         <p className="text-brand-cyan font-display text-xl md:text-2xl tracking-wide mt-10">
-          {page.tagline}
+          {bx(page.tagline)}
         </p>
       </section>
 
