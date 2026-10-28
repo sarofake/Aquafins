@@ -161,6 +161,15 @@ function digitsOnly(value) {
   return String(value || '').replace(/[^\d+]/g, '');
 }
 
+/** A stored phone number is usable when it has enough digits to dial. */
+function isUsablePhone(value) {
+  return String(value || '').replace(/\D/g, '').length >= 8;
+}
+
+function isUsableEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
+}
+
 /** Derives a Messenger chat link from a Facebook page URL, when possible. */
 function messengerFromFacebook(url) {
   try {
@@ -188,7 +197,10 @@ function toWhatsAppHref(value) {
   if (digits.startsWith('00')) digits = digits.slice(2);
   if (digits.startsWith('0')) digits = `880${digits.slice(1)}`;
 
-  return digits ? `https://wa.me/${digits}` : '';
+  // Too short to be a real number (placeholder text, half-typed input).
+  if (digits.length < 8) return '';
+
+  return `https://wa.me/${digits}`;
 }
 
 /** Normalises a stored website value into an absolute URL. */
@@ -214,7 +226,12 @@ export function useSocialLinks(initialInfo = null) {
     tiktok: pick('tiktok'),
     twitter: (info.twitter || '').trim(),
     messenger: messengerFromFacebook(facebook),
-    whatsapp: toWhatsAppHref((info.whatsapp || '').trim() || FALLBACK_CONTACT.whatsapp),
+    // Placeholder/partial numbers (e.g. "+880 1XXX-XXXXXX") would produce a
+    // dead wa.me link, so fall back to the shipped default instead.
+    whatsapp:
+      toWhatsAppHref(info.whatsapp) ||
+      toWhatsAppHref(isUsablePhone(info.phone_primary) ? info.phone_primary : '') ||
+      toWhatsAppHref(FALLBACK_CONTACT.whatsapp),
   };
 }
 
@@ -222,23 +239,28 @@ export function useSocialLinks(initialInfo = null) {
 export function useContactInfo(initialInfo = null) {
   const { info, loading } = useSiteInfo(initialInfo);
 
-  const phone = (info.phone_primary || '').trim() || FALLBACK_CONTACT.phone;
-  const email = (info.email || '').trim() || FALLBACK_CONTACT.email;
+  const phone = isUsablePhone(info.phone_primary)
+    ? info.phone_primary.trim()
+    : FALLBACK_CONTACT.phone;
+  const email = isUsableEmail(info.email) ? info.email.trim() : FALLBACK_CONTACT.email;
+  const whatsapp = isUsablePhone(info.whatsapp)
+    ? info.whatsapp.trim()
+    : phone;
 
   return {
     loading,
     phone,
-    phoneAlt: (info.phone_secondary || '').trim(),
+    phoneAlt: isUsablePhone(info.phone_secondary) ? info.phone_secondary.trim() : '',
     phoneHref: `tel:${digitsOnly(phone).replace(/^\+/, '')}`,
     email,
-    emailSupport: (info.email_support || '').trim(),
+    emailSupport: isUsableEmail(info.email_support) ? info.email_support.trim() : '',
     website: (info.website || '').trim(),
     websiteHref: toWebsiteHref(info.website),
     address: (info.address || '').trim(),
     addressBn: (info.address_bn || '').trim(),
     city: (info.city || '').trim(),
     country: (info.country || '').trim(),
-    whatsappHref: toWhatsAppHref((info.whatsapp || '').trim() || phone),
-    whatsappNumber: (info.whatsapp || '').trim() || phone,
+    whatsappHref: toWhatsAppHref(whatsapp),
+    whatsappNumber: whatsapp,
   };
 }
