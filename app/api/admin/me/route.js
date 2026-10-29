@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
-import { SESSION_COOKIE, verifySessionToken } from '@/lib/adminSession';
+import { authed } from '@/lib/adminHelpers';
 
 export async function GET(req) {
-  const token = req.cookies?.get(SESSION_COOKIE)?.value;
-  return NextResponse.json({ ok: verifySessionToken(token) });
+  const ok = await authed(req);
+  return NextResponse.json(
+    { ok },
+    { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+  );
 }

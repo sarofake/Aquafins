@@ -3,7 +3,7 @@ import { requireAuth } from '@/lib/adminHelpers';
 import { runDbMigrations, getDbConnectionString, DB_ENV_HINT } from '@/lib/dbMigrations.mjs';
 
 export async function GET(req) {
-  const authCheck = requireAuth(req);
+  const authCheck = await requireAuth(req);
   if (authCheck) return authCheck;
 
   const hasConnectionString = Boolean(getDbConnectionString());
@@ -16,7 +16,7 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-  const authCheck = requireAuth(req);
+  const authCheck = await requireAuth(req);
   if (authCheck) return authCheck;
 
   try {

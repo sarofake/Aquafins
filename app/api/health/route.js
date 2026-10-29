@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { supabase } from '@/lib/supabase';
+import { authed } from '@/lib/adminHelpers';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -43,8 +44,26 @@ async function readSiteInfo(client) {
   return site;
 }
 
-export async function GET() {
+export async function GET(req) {
   const client = supabaseAdmin || supabase;
+
+  // Anonymous callers get a minimal boolean — no DB latency, config hints,
+  // table names or deployment metadata. The full payload stays admin-only.
+  if (!(await authed(req))) {
+    let ok = false;
+    try {
+      const siteResult = await readSiteInfo(client);
+      const tables = client ? await checkTables(client) : {};
+      const missingTables = REQUIRED_TABLES.filter((table) => !tables[table]);
+      ok = !siteResult.error && missingTables.length === 0;
+    } catch {
+      ok = false;
+    }
+    return NextResponse.json(
+      { ok },
+      { status: ok ? 200 : 503, headers: { 'Cache-Control': 'no-store, max-age=0' } }
+    );
+  }
 
   const database = { ok: false, latencyMs: null };
   let tables = {};

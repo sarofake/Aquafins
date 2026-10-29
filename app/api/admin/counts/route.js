@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireAuth, requireSupabase } from '@/lib/adminHelpers';
 
 export async function GET(req) {
-  const authCheck = requireAuth(req);
+  const authCheck = await requireAuth(req);
   if (authCheck) return authCheck;
 
   const sb = requireSupabase();

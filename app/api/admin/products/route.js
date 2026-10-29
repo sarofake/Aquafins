@@ -4,7 +4,7 @@ import { requireAuth, requireSupabase, sanitizeProduct, ensureUniqueSlug } from 
 import { invalidateCache } from '@/lib/cache';
 
 export async function GET(req) {
-  const authCheck = requireAuth(req);
+  const authCheck = await requireAuth(req);
   if (authCheck) return authCheck;
 
   const sb = requireSupabase();
@@ -42,7 +42,7 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-  const authCheck = requireAuth(req);
+  const authCheck = await requireAuth(req);
   if (authCheck) return authCheck;
 
   const sb = requireSupabase();

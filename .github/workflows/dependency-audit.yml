@@ -1,0 +1,20 @@
+# VULN-14: weekly dependency vulnerability scan. Fails the build when any
+# moderate-or-higher advisory affects the dependency tree (matches `npm audit`).
+name: Dependency Audit
+
+on:
+  schedule:
+    - cron: "0 3 * * 1" # every Monday 03:00 UTC
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm audit --audit-level=moderate

@@ -212,6 +212,17 @@ export default function ContactSection({ id = 'contact', showHeader = true, show
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand-cyan via-brand-accent to-brand-blue" />
 
             <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Honeypot — invisible to humans, bots autofill it and get discarded */}
+              <input
+                type="text"
+                name="website"
+                value={formData.website || ''}
+                onChange={handleChange}
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                className="absolute opacity-0 h-0 w-0 pointer-events-none -z-10"
+              />
               {/* Name & Phone Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 {/* Full Name */}
@@ -225,6 +236,7 @@ export default function ContactSection({ id = 'contact', showHeader = true, show
                       type="text"
                       name="name"
                       required
+                      maxLength={100}
                       value={formData.name}
                       onChange={handleChange}
                       placeholder="e.g. Tanvir Ahmed"
@@ -244,6 +256,7 @@ export default function ContactSection({ id = 'contact', showHeader = true, show
                       type="tel"
                       name="phone"
                       required
+                      maxLength={20}
                       value={formData.phone}
                       onChange={handleChange}
                       placeholder="017XXXXXXXX"
@@ -265,6 +278,7 @@ export default function ContactSection({ id = 'contact', showHeader = true, show
                     <input
                       type="email"
                       name="email"
+                      maxLength={254}
                       value={formData.email}
                       onChange={handleChange}
                       placeholder="name@example.com"
@@ -305,6 +319,7 @@ export default function ContactSection({ id = 'contact', showHeader = true, show
                     name="message"
                     required
                     rows={4}
+                    maxLength={2000}
                     value={formData.message}
                     onChange={handleChange}
                     placeholder={t('messagePlaceholder')}

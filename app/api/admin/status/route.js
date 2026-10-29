@@ -99,7 +99,7 @@ async function checkCloudinary() {
 }
 
 export async function GET(req) {
-  const authCheck = requireAuth(req);
+  const authCheck = await requireAuth(req);
   if (authCheck) return authCheck;
 
   const [database, cloudinaryStatus] = await Promise.all([checkDatabase(), checkCloudinary()]);

@@ -22,3 +22,7 @@ SUPABASE_CLOUDINARY_SETUP.md
 
 # Supabase CLI temp/cache
 supabase/.temp/
+
+# Security audit reports (don't publish vulnerabilities template-wide)
+SECURITY_AUDIT.md
+valnurabili.md

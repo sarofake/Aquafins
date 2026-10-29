@@ -5,7 +5,7 @@ import { translateToBangla } from '@/lib/translator';
 import { invalidateCache } from '@/lib/cache';
 
 export async function PUT(req, { params }) {
-  const authCheck = requireAuth(req);
+  const authCheck = await requireAuth(req);
   if (authCheck) return authCheck;
 
   const sb = requireSupabase();
@@ -69,7 +69,7 @@ export async function PUT(req, { params }) {
 }
 
 export async function DELETE(req, { params }) {
-  const authCheck = requireAuth(req);
+  const authCheck = await requireAuth(req);
   if (authCheck) return authCheck;
 
   const sb = requireSupabase();
